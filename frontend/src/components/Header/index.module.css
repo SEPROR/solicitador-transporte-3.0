@@ -1,0 +1,239 @@
+.header {
+  width: 100%;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  height: 3rem;
+  width: auto;
+}
+
+.divider {
+  border-left: 1px solid #d1d5db;
+  height: 3rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.userMenu {
+  position: relative;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  color: #374151;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.userButton:hover {
+  background-color: #f3f4f6;
+}
+
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background-color: #dbeafe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #2563eb;
+}
+
+.userInfo {
+  text-align: left;
+  line-height: 1.25;
+}
+
+@media (max-width: 639px) {
+  .userInfo {
+    display: none;
+  }
+}
+
+.userName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.userRole {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.chevron {
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  margin-top: 0.5rem;
+  width: 15rem;
+  background-color: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.dropdownHeader {
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.dropdownLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.125rem;
+}
+
+.dropdownUserName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.dropdownList {
+  padding: 0.25rem 0;
+}
+
+.dropdownItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: #374151;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdownItem:hover {
+  background-color: #f9fafb;
+}
+
+.trocaruser {
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+}
+
+.solitrans {
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+}
+
+.gerentrans {
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+}
+
+.gerenmoto {
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+}
+
+.gerensetor{
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+}
+
+.relatorio {
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+}
+
+.senha {
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+}
+
+.dropdownDivider {
+  border-top: 1px solid #f3f4f6;
+  margin: 0.25rem 0;
+}
+
+.dropdownItemDanger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdownItemDanger:hover {
+  background-color: #fef2f2;
+}

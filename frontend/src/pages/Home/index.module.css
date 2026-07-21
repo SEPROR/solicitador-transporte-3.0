@@ -1,0 +1,8 @@
+.appContainer {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #f9fafb, rgba(239, 246, 255, 0.3), #f9fafb);
+}
+
+.main {
+  padding: 3rem 1.5rem;
+}
