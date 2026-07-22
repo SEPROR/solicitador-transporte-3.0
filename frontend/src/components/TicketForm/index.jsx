@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import styles from './index.module.css';
 
 // Ajuste conforme onde o servidor está rodando (porta 2999 por padrão)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5173';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 
 export function TicketForm() {
   const [formData, setFormData] = useState({

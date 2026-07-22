@@ -1,0 +1,21 @@
+.section {
+  margin-bottom: 32px;
+}
+
+.titulo {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 12px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.vazio {
+  font-size: 14px;
+  color: #9ca3af;
+  font-style: italic;
+}
