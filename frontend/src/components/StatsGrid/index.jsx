@@ -1,26 +1,46 @@
-import styles from "./index.module.css";
+import styles from './index.module.css';
 
-export default function StatsGrid({ dados, total }) {
-  const conc = dados.filter(s => s.status === "Concluída").length;
-  const canc = dados.filter(s => s.status === "Cancelada").length;
-  const km   = dados.reduce((a, s) => a + (s.km || 0), 0);
+export function StatsGrid({ filtrados, totalGeral }) {
+  const motoristasUnicos = new Set(
+    filtrados.map((s) => s.motorista).filter((m) => m && m !== '—')
+  ).size;
 
-  const cards = [
-    { label: "Filtradas",      value: dados.length,                    sub: `de ${total} total`,  color: styles.blue  },
-    { label: "Concluídas",     value: conc,                            sub: "no filtro atual",     color: styles.green },
-    { label: "Canceladas",     value: canc,                            sub: "no filtro atual",     color: styles.red   },
-    { label: "KM Percorridos", value: km.toLocaleString("pt-BR")+" km",sub: "soma do filtro",     color: styles.amber },
+  const setoresUnicos = new Set(
+    filtrados.map((s) => s.setor).filter((s) => s && s !== '—')
+  ).size;
+
+  const items = [
+    {
+      label: filtrados[0]?.status || 'Status',
+      value: filtrados.length,
+      sub: `de ${totalGeral} total`,
+      cor: 'green'
+    },
+    {
+      label: 'Motoristas Envolvidos',
+      value: motoristasUnicos,
+      sub: 'no filtro atual',
+      cor: 'amber'
+    },
+    {
+      label: 'Setores Atendidos',
+      value: setoresUnicos,
+      sub: 'no filtro atual',
+      cor: 'red'
+    }
   ];
 
   return (
     <div className={styles.grid}>
-      {cards.map(c => (
-        <div key={c.label} className={styles.card}>
-          <div className={`${styles.value} ${c.color}`}>{c.value}</div>
-          <div className={styles.label}>{c.label}</div>
-          <div className={styles.sub}>{c.sub}</div>
+      {items.map((item, index) => (
+        <div key={index} className={styles.card}>
+          <div className={`${styles.valor} ${styles[item.cor]}`}>{item.value}</div>
+          <div className={styles.label}>{item.label}</div>
+          <div className={styles.sub}>{item.sub}</div>
         </div>
       ))}
     </div>
   );
 }
+
+export default StatsGrid;
