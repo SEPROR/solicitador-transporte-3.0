@@ -58,12 +58,13 @@ export function Header() {
                     <ArrowLeftRight className={styles.trocaruser} />
                     <span>Trocar usuário</span>
                   </button>
+
                   <button
                     onClick={() => setOpen(false)}
                     className={styles.dropdownItem}
                   >
                     <div className={styles.solitrans} />
-                    <span>Solicitação de transporte</span>
+                    <a href="/">Solicitação de transporte</a>
                   </button>
 
                   <button
@@ -71,7 +72,7 @@ export function Header() {
                     className={styles.dropdownItem}
                   >
                     <div className={styles.gerentrans} />
-                    <span>Gerenciador de transporte</span>
+                    <a href="/manager">Gerenciador de transporte</a>
                   </button>
 
                   <button
@@ -87,7 +88,7 @@ export function Header() {
                     className={styles.dropdownItem}
                   >
                     <div className={styles.gerensetor} />
-                    <span>Gerenciar Setores</span>
+                    <a href="/setores">Gerenciar Setores</a>
                   </button>
 
                   <button
