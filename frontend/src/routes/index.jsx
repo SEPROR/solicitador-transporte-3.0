@@ -3,6 +3,7 @@ import Home from '../pages/Home/Home';
 import Setores from '../pages/Setores/Setores';
 import Manager from '../pages/Manager/Manager';
 import Login from '../pages/Login/Login';
+import Relatorio from '../pages/Relatorio/Relatorio';
 
 const AppRoutes = () => {
     return (
@@ -12,6 +13,7 @@ const AppRoutes = () => {
                 <Route path="/setores" element={<Setores />} />
                 <Route path="/manager" element={<Manager />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/relatorio" element={<Relatorio />} />
             </Routes>
         </BrowserRouter>
     )
