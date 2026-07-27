@@ -1,24 +1,23 @@
 import styles from './index.module.css';
 
-export const TODOS_MOTORISTAS = 'Todos os Motoristas';
-export const TODOS_STATUS = 'Todos os Status';
-export const TODOS_PERIODOS = 'Todos os Períodos';
+const TODOS_MOTORISTAS = 'Todos os Motoristas';
+const TODOS_STATUS = 'Todos os Status';
+const TODOS_PERIODOS = 'Todos os Períodos';
 
 export function HistoricoFilters({
   busca,
+  onBuscaChange,
   motorista,
+  onMotoristaChange,
   status,
+  onStatusChange,
   periodo,
+  onPeriodoChange,
   motoristasOptions,
   periodosOptions,
-  onBuscaChange,
-  onMotoristaChange,
-  onStatusChange,
-  onPeriodoChange,
   onLimpar
 }) {
   const chips = [];
-
   if (motorista !== TODOS_MOTORISTAS) {
     chips.push({ label: motorista, onRemover: () => onMotoristaChange(TODOS_MOTORISTAS) });
   }
@@ -26,31 +25,34 @@ export function HistoricoFilters({
     chips.push({ label: status, onRemover: () => onStatusChange(TODOS_STATUS) });
   }
   if (periodo !== TODOS_PERIODOS) {
-    const labelPeriodo = periodosOptions.find((p) => p.chave === periodo)?.label || periodo;
-    chips.push({ label: labelPeriodo, onRemover: () => onPeriodoChange(TODOS_PERIODOS) });
+    const periodoOpt = periodosOptions.find((p) => p.chave === periodo);
+    chips.push({
+      label: periodoOpt ? periodoOpt.label : periodo,
+      onRemover: () => onPeriodoChange(TODOS_PERIODOS)
+    });
   }
 
-  const filtroAtivo = chips.length > 0 || busca;
+  const temFiltroAtivo = chips.length > 0 || busca;
 
   return (
     <div className={styles.card}>
-      <div className={styles.header}>
+      <div className={styles.filtersHeader}>
         <svg
           width="16"
           height="16"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
+          stroke="#2196a6"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
         </svg>
-        <span className={styles.headerLabel}>Filtros</span>
+        <span className={styles.filtersHeaderLabel}>Filtros</span>
 
-        {filtroAtivo && (
-          <button className={styles.btnLimpar} onClick={onLimpar}>
+        {temFiltroAtivo && (
+          <button className={styles.btnGhost} onClick={onLimpar}>
             <svg
               width="13"
               height="13"
@@ -60,6 +62,7 @@ export function HistoricoFilters({
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
+              style={{ marginRight: 4 }}
             >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -69,8 +72,8 @@ export function HistoricoFilters({
         )}
       </div>
 
-      <div className={styles.grid}>
-        <div className={styles.field}>
+      <div className={styles.filtersGrid}>
+        <div className={styles.filterField}>
           <svg
             className={styles.icon}
             viewBox="0 0 24 24"
@@ -92,7 +95,7 @@ export function HistoricoFilters({
           />
         </div>
 
-        <div className={styles.field}>
+        <div className={styles.filterField}>
           <svg
             className={styles.icon}
             viewBox="0 0 24 24"
@@ -112,12 +115,23 @@ export function HistoricoFilters({
           >
             <option>{TODOS_MOTORISTAS}</option>
             {motoristasOptions.map((nome) => (
-              <option key={nome}>{nome}</option>
+              <option key={nome} value={nome}>{nome}</option>
             ))}
           </select>
+          <svg
+            className={styles.chevron}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
 
-        <div className={styles.field}>
+        <div className={styles.filterField}>
           <svg
             className={styles.icon}
             viewBox="0 0 24 24"
@@ -139,9 +153,20 @@ export function HistoricoFilters({
             <option value="em_andamento">Em andamento</option>
             <option value="aberto">Abertas</option>
           </select>
+          <svg
+            className={styles.chevron}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
 
-        <div className={styles.field}>
+        <div className={styles.filterField}>
           <svg
             className={styles.icon}
             viewBox="0 0 24 24"
@@ -161,20 +186,29 @@ export function HistoricoFilters({
             onChange={(e) => onPeriodoChange(e.target.value)}
             className={styles.select}
           >
-            <option value={TODOS_PERIODOS}>{TODOS_PERIODOS}</option>
+            <option>{TODOS_PERIODOS}</option>
             {periodosOptions.map((p) => (
-              <option key={p.chave} value={p.chave}>
-                {p.label}
-              </option>
+              <option key={p.chave} value={p.chave}>{p.label}</option>
             ))}
           </select>
+          <svg
+            className={styles.chevron}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
       </div>
 
       {chips.length > 0 && (
         <div className={styles.chipsRow}>
-          {chips.map((chip, index) => (
-            <span key={index} className={styles.chip}>
+          {chips.map((chip, i) => (
+            <span key={i} className={styles.chip}>
               {chip.label}
               <button onClick={chip.onRemover}>
                 <svg

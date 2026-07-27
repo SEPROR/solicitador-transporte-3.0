@@ -4,6 +4,7 @@ import Setores from '../pages/Setores/Setores';
 import Manager from '../pages/Manager/Manager';
 import Login from '../pages/Login/Login';
 import Relatorio from '../pages/Relatorio/Relatorio';
+import Motoristas from '../pages/Motorista/Motorista';
 
 const AppRoutes = () => {
     return (
@@ -14,6 +15,7 @@ const AppRoutes = () => {
                 <Route path="/manager" element={<Manager />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/relatorio" element={<Relatorio />} />
+                <Route path="/motoristas" element={<Motoristas />} />
             </Routes>
         </BrowserRouter>
     )

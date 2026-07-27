@@ -14,29 +14,29 @@ export function StatsGrid({ filtrados, totalGeral }) {
       label: filtrados[0]?.status || 'Status',
       value: filtrados.length,
       sub: `de ${totalGeral} total`,
-      cor: 'green'
+      color: styles.green
     },
     {
       label: 'Motoristas Envolvidos',
       value: motoristasUnicos,
       sub: 'no filtro atual',
-      cor: 'amber'
+      color: styles.amber
     },
     {
       label: 'Setores Atendidos',
       value: setoresUnicos,
       sub: 'no filtro atual',
-      cor: 'red'
+      color: styles.red
     }
   ];
 
   return (
-    <div className={styles.grid}>
-      {items.map((item, index) => (
-        <div key={index} className={styles.card}>
-          <div className={`${styles.valor} ${styles[item.cor]}`}>{item.value}</div>
-          <div className={styles.label}>{item.label}</div>
-          <div className={styles.sub}>{item.sub}</div>
+    <div className={styles.statsGrid}>
+      {items.map((item, i) => (
+        <div key={i} className={styles.statCard}>
+          <div className={`${styles.statValue} ${item.color}`}>{item.value}</div>
+          <div className={styles.statLabel}>{item.label}</div>
+          <div className={styles.statSub}>{item.sub}</div>
         </div>
       ))}
     </div>

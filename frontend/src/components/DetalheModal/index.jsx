@@ -1,59 +1,13 @@
-import StatusBadge from "../StatusBadge";
-import styles from "./index.module.css";
+import { X, Download } from 'lucide-react';
+import styles from './index.module.css';
 
-const CAMPOS = [
-  ["Solicitante", "solicitante"], ["Setor",       "setor"      ],
-  ["Destino",     "destino"    ], ["Motorista",   "motorista"  ],
-  ["Data de Saída","dataPartida"],["Hora de Saída","horaPartida"],
-  ["Aberta em",   "abertaEm"  ], ["Encerrada em","fechadaEm"  ],
-];
+function RequestModal({ request, onClose, onExport }) {
+  if (!request) return null;
 
-export default function DetalheModal({ solicitacao, onClose, onPDF }) {
-  if (!solicitacao) return null;
+  const fields = [['Solicitante', request.solicitante], ['Setor', request.setor], ['Destino', request.destino], ['Motorista', request.motorista], ['Data de Saída', request.dataPartida], ['Hora de Saída', request.horaPartida], ['Aberta em', request.abertaEm], ['Encerrada em', request.fechadaEm]];
+  if (request.motoristaAnterior) fields.push(['Redirecionada de', request.motoristaAnterior]);
 
-  return (
-    <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className={styles.modal}>
-        <div className={styles.head}>
-          <div>
-            <div className={styles.overline}>Solicitação #{solicitacao.id}</div>
-            <h2 className={styles.title}>{solicitacao.solicitante} — {solicitacao.tipo}</h2>
-          </div>
-          <button className={styles.closeBtn} onClick={onClose}>✕</button>
-        </div>
-
-        <div className={styles.body}>
-          <StatusBadge status={solicitacao.status} />
-
-          <div className={styles.grid}>
-            {CAMPOS.map(([label, key]) => (
-              <div key={key} className={styles.field}>
-                <div className={styles.fieldLabel}>{label}</div>
-                <div className={styles.fieldValue}>{solicitacao[key]}</div>
-              </div>
-            ))}
-          </div>
-
-          {solicitacao.km > 0 && (
-            <div className={styles.kmBox}>
-              <span className={styles.kmIcon}>→</span>
-              <div>
-                <div className={styles.kmLabel}>KM Percorrido</div>
-                <div className={styles.kmValue}>{solicitacao.km} km</div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className={styles.footer}>
-          <button className={styles.btnOutline} onClick={() => onPDF([solicitacao])}>
-            ⬇ Exportar PDF
-          </button>
-          <button className={styles.btnPrimary} onClick={onClose}>
-            Fechar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  return <div className={styles.overlay} onClick={(event) => event.target === event.currentTarget && onClose()}><div className={styles.modal}><header><div><span>Solicitação #{request.id}</span><h2>{request.solicitante}</h2></div><button onClick={onClose}><X /></button></header><main><span className={`${styles.badge} ${styles[request.status]}`}>{request.status}</span><div className={styles.grid}>{fields.map(([label, value]) => <div key={label}><small>{label}</small><strong>{value}</strong></div>)}</div><div className={styles.notes}><small>Ocorrência / Observações</small><p>{request.ocorrencia}</p></div></main><footer><button onClick={onExport}><Download size={15} /> Exportar PDF</button><button className={styles.primary} onClick={onClose}>Fechar</button></footer></div></div>;
 }
+
+export default RequestModal;
