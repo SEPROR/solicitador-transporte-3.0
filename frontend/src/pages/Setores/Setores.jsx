@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import styles from './index.module.css';
+import Header from '../../components/Header';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 
@@ -107,6 +108,8 @@ export function ManageSetores() {
   };
 
   return (
+    <div>
+      <Header/>
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Gerenciar Setores</h1>
 
@@ -192,6 +195,8 @@ export function ManageSetores() {
         </div>
       </div>
     </div>
+        </div>
+
   );
 }
 
