@@ -80,7 +80,7 @@ export function Header() {
                     className={styles.dropdownItem}
                   >
                     <div className={styles.gerenmoto} />
-                    <span>Gerenciar Motoristas</span>
+                    <a href="/motoristas">Gerenciar Motoristas</a>
                   </button>
 
                   <button
@@ -96,7 +96,7 @@ export function Header() {
                     className={styles.dropdownItem}
                   >
                     <div className={styles.relatorio} />
-                    <span>Acessar Relatório</span>
+                    <a href="/relatorio">Acessar Relatório</a>
                   </button>
 
                   <button
@@ -104,7 +104,7 @@ export function Header() {
                     className={styles.dropdownItem}
                   >
                     <div className={styles.senha} />
-                    <span>Alterar senha</span>
+                    <a href="/alterar-senha">Alterar senha</a>
                   </button>
                   
 

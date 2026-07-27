@@ -1,25 +1,25 @@
-.grid {
+.statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 20px;
 }
 
-.card {
+.statCard {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 18px 20px;
 }
 
-.valor {
+.statValue {
   font-size: 28px;
   font-weight: 700;
-  margin-bottom: 4px;
+  line-height: 1.2;
 }
 
 .green {
-  color: #059669;
+  color: #16a34a;
 }
 
 .amber {
@@ -30,14 +30,14 @@
   color: #dc2626;
 }
 
-.label {
+.statLabel {
   font-size: 13px;
   font-weight: 600;
   color: #374151;
-  text-transform: capitalize;
+  margin-top: 4px;
 }
 
-.sub {
+.statSub {
   font-size: 12px;
   color: #9ca3af;
   margin-top: 2px;
