@@ -1,4 +1,5 @@
 import  Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import TicketForm from '../../components/TicketForm';
 
 export default function App() {
@@ -8,6 +9,7 @@ export default function App() {
       <main className="px-6 py-12">
         <TicketForm />
       </main>
+      <Footer/>
     </div>
   );
 }

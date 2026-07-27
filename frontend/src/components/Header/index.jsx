@@ -63,7 +63,7 @@ export function Header() {
                     onClick={() => setOpen(false)}
                     className={styles.dropdownItem}
                   >
-                    <div className={styles.solitrans} />
+                    <div className={styles.headerItens} />
                     <a href="/">Solicitação de transporte</a>
                   </button>
 
@@ -71,7 +71,7 @@ export function Header() {
                     onClick={() => setOpen(false)}
                     className={styles.dropdownItem}
                   >
-                    <div className={styles.gerentrans} />
+                    <div className={styles.headerItens} />
                     <a href="/manager">Gerenciador de transporte</a>
                   </button>
 
@@ -79,7 +79,7 @@ export function Header() {
                     onClick={() => setOpen(false)}
                     className={styles.dropdownItem}
                   >
-                    <div className={styles.gerenmoto} />
+                    <div className={styles.headerItens} />
                     <a href="/motoristas">Gerenciar Motoristas</a>
                   </button>
 
@@ -87,7 +87,7 @@ export function Header() {
                     onClick={() => setOpen(false)}
                     className={styles.dropdownItem}
                   >
-                    <div className={styles.gerensetor} />
+                    <div className={styles.headerItens} />
                     <a href="/setores">Gerenciar Setores</a>
                   </button>
 
@@ -95,7 +95,7 @@ export function Header() {
                     onClick={() => setOpen(false)}
                     className={styles.dropdownItem}
                   >
-                    <div className={styles.relatorio} />
+                    <div className={styles.headerItens} />
                     <a href="/relatorio">Acessar Relatório</a>
                   </button>
 
@@ -103,7 +103,7 @@ export function Header() {
                     onClick={() => setOpen(false)}
                     className={styles.dropdownItem}
                   >
-                    <div className={styles.senha} />
+                    <div className={styles.headerItens} />
                     <a href="/alterar-senha">Alterar senha</a>
                   </button>
                   

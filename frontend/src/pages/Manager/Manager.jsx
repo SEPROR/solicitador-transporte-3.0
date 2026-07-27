@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import StatusFilter from '../../components/StatusFilter';
 import SolicitacoesSection from '../../components/SolicitacoesSection';
+import styles from './index.module.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 
@@ -17,8 +18,12 @@ export default function Manager() {
   const carregarSolicitacoes = useCallback(async () => {
     try {
       const [solicitacaoResponse, authResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/solicitacao`, { credentials: 'include' }),
-        fetch(`${API_BASE_URL}/api/auth/status`, { credentials: 'include' })
+        fetch(`${API_BASE_URL}/api/solicitacao`, {
+          credentials: 'include'
+        }),
+        fetch(`${API_BASE_URL}/api/auth/status`, {
+          credentials: 'include'
+        })
       ]);
 
       const solicitacaoData = await solicitacaoResponse.json();
@@ -37,6 +42,7 @@ export default function Manager() {
         const response = await fetch(`${API_BASE_URL}/api/auth/status`, {
           credentials: 'include'
         });
+
         const data = await response.json();
 
         if (!data.autenticado) {
@@ -60,16 +66,17 @@ export default function Manager() {
     return (
       <div>
         <Header />
-        <main style={{ padding: '48px 24px', textAlign: 'center' }}>
+        <main className={styles.loadingContainer}>
           <p>Carregando...</p>
         </main>
       </div>
     );
   }
 
-  // Filtro de nível de acesso: N1/N2 só veem solicitações abertas ou designadas a eles
   const usaFiltroNivel =
-    !authData.isAdmin && authData.nivelAcesso && ['N1', 'N2'].includes(authData.nivelAcesso);
+    !authData.isAdmin &&
+    authData.nivelAcesso &&
+    ['N1', 'N2'].includes(authData.nivelAcesso);
 
   const solicitacoesFiltradas = usaFiltroNivel
     ? solicitacoes.filter(
@@ -77,16 +84,22 @@ export default function Manager() {
       )
     : solicitacoes;
 
-  const abertas = solicitacoesFiltradas.filter((s) => s.status === 'aberto');
-  const emAndamento = solicitacoesFiltradas.filter((s) => s.status === 'em_andamento');
-  const fechadas = solicitacoesFiltradas.filter((s) => s.status === 'fechado');
+  const abertas = solicitacoesFiltradas.filter(
+    (s) => s.status === 'aberto'
+  );
+  const emAndamento = solicitacoesFiltradas.filter(
+    (s) => s.status === 'em_andamento'
+  );
+  const fechadas = solicitacoesFiltradas.filter(
+    (s) => s.status === 'fechado'
+  );
 
   return (
     <div>
       <Header />
 
-      <main style={{ padding: '32px 24px', maxWidth: 960, margin: '0 auto' }}>
-        <h1 style={{ marginBottom: 24 }}>Gerenciador de Solicitações</h1>
+      <main className={styles.container}>
+        <h1 className={styles.title}>Gerenciador de Solicitações</h1>
 
         <StatusFilter
           value={filtroStatus}
