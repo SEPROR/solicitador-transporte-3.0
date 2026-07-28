@@ -7,7 +7,7 @@
 .pageTitle {
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937;
+  color: #111827;
   margin-bottom: 24px;
 }
 
@@ -22,7 +22,7 @@
 .sectionTitle {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
+  color: #111827;
   margin-bottom: 16px;
 }
 
@@ -41,7 +41,7 @@
 .label {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: #111827;
 }
 
 .input {
