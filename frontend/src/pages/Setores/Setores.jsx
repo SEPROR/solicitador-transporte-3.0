@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import styles from './index.module.css';
 import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 
@@ -195,6 +196,9 @@ export function ManageSetores() {
         </div>
       </div>
     </div>
+
+      <Footer/>
+
         </div>
 
   );

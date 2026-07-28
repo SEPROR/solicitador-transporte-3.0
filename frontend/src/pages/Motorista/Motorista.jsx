@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import styles from './index.module.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
@@ -168,6 +169,7 @@ export default function Motoristas() {
         <main style={{ padding: '48px 24px', textAlign: 'center' }}>
           <p>Carregando...</p>
         </main>
+        <Footer/>
       </div>
     );
   }
@@ -294,6 +296,7 @@ export default function Motoristas() {
           </div>
         </div>
       </main>
+      <Footer/>
     </div>
   );
 }

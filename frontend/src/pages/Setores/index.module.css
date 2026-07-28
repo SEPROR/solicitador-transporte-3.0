@@ -1,13 +1,13 @@
 .container {
   max-width: 720px;
-  margin: 70px auto 2rem auto;
+  margin: 80px auto 2rem auto;
   padding: 0 24px;
 }
 
 .pageTitle {
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937;
+  color: #111827;
   margin-bottom: 24px;
 }
 
@@ -22,7 +22,7 @@
 .sectionTitle {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
+  color: #111827;
   margin-bottom: 16px;
 }
 
@@ -41,7 +41,7 @@
 .label {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: #111827;
 }
 
 .input,
@@ -50,7 +50,7 @@
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 14px;
-  color: #1f2937;
+  color: #111827;
   outline: none;
   transition: border-color 0.15s ease;
   font-family: inherit;

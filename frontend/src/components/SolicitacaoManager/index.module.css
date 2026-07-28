@@ -8,16 +8,17 @@
 }
 
 .solicitacao.aberto {
-  border-left-color: #d97706;
-}
+    border-left: 4px solid #ef4444;
+    background-color: #fde7e7;}
 
 .solicitacao.em_andamento {
-  border-left-color: #2563eb;
+    border-left: 4px solid #FEDF00;
+    background-color: #fffbe2;
 }
 
 .solicitacao.fechado {
-  border-left-color: #16a34a;
-  opacity: 0.85;
+    border-left: 4px solid #28a745;
+    background-color: #f0fff4;
 }
 
 .titulo {

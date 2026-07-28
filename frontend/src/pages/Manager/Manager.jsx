@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import StatusFilter from '../../components/StatusFilter';
 import SolicitacoesSection from '../../components/SolicitacoesSection';
 import styles from './index.module.css';
@@ -132,6 +133,7 @@ export default function Manager() {
           visivel={!filtroStatus || filtroStatus === 'fechado'}
         />
       </main>
+          <Footer/>
     </div>
   );
 }
