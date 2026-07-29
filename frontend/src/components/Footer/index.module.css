@@ -1,9 +1,10 @@
 .footer {
   background-color: #ffffff;
   color: #f0f0f0; 
-  padding: 15px 0; 
+  padding: 10px 0; 
   width: 100%; 
   text-align: center;
+  margin-top: auto;
 }
 
 .footer-content {
@@ -48,7 +49,7 @@
 }
 
 .copyright {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: #000000;
   margin: 0;
 }

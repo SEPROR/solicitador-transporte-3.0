@@ -132,6 +132,7 @@ export default function Manager() {
           onAtualizar={carregarSolicitacoes}
           visivel={!filtroStatus || filtroStatus === 'fechado'}
         />
+
       </main>
           <Footer/>
     </div>

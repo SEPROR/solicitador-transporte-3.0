@@ -20,6 +20,12 @@
   justify-content: space-between;
 }
 
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* controla a distância entre o usuário e a logo */
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -29,6 +35,18 @@
 .logo {
   height: 3rem;
   width: auto;
+}
+
+/* .brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+} */
+
+.logoSecundaria {
+ height: 2.5rem;
+  width: auto;
+  margin-left: -8px;
 }
 
 .divider {
