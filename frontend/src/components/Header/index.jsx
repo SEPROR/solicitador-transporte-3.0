@@ -27,7 +27,8 @@ export function Header() {
               <p className={styles.subtitle}>GILOG</p>
             </div>
           </div>
-
+          
+          <div className={styles.rightSection}>
           <div className={styles.userMenu} ref={ref}>
             <button
               onClick={() => setOpen((v) => !v)}
@@ -121,6 +122,13 @@ export function Header() {
               </div>
             )}
           </div>
+          {/* Nova imagem */}
+            <img
+              src="/images/seprorazul.png"
+              alt="Nova Logo"
+              className={styles.logoSecundaria}
+            />
+        </div>
         </div>
       </div>
     </header>

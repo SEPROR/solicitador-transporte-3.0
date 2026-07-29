@@ -384,6 +384,51 @@ async function processarRespostaSolicitacao(
   }
 }
 
+
+/// Excluir uma solicitação finalizada (exclusão definitiva)
+app.delete('/api/solicitacao/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!req.session.isAdmin) {
+    return res.status(403).json({ error: 'Apenas administradores podem excluir solicitações' });
+  }
+
+  try {
+    // Buscar a solicitação para verificar o status
+    const solicitacaoResult = await pool.query(
+      'SELECT status FROM solicitacoes WHERE id = $1',
+      [id]
+    );
+
+    if (solicitacaoResult.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Solicitação não encontrada'
+      });
+    }
+
+    // Só permite excluir solicitações já finalizadas
+    if (solicitacaoResult.rows[0].status !== 'fechado') {
+      return res.status(400).json({
+        error: 'Apenas solicitações finalizadas podem ser excluídas'
+      });
+    }
+
+    await pool.query('DELETE FROM solicitacoes WHERE id = $1', [id]);
+
+    res.json({
+      success: true,
+      message: 'Solicitação excluída com sucesso'
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: 'Erro ao excluir solicitação'
+    });
+  }
+});
+
+
 // Processar registro do técnico
 async function processarRegistro(chatId) {
   try {

@@ -19,3 +19,32 @@
   color: #9ca3af;
   font-style: italic;
 }
+
+.itemComAcao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.botaoExcluir {
+  align-self: flex-end;
+  background-color: #dc2626;
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.botaoExcluir:hover {
+  background-color: #b91c1c;
+}
+
+.botaoExcluir:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
