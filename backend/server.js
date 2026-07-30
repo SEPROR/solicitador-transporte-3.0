@@ -19,9 +19,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 app.use(cors({
-  origin: 'http://localhost:5173', // porta do seu React (Vite = 5173, CRA = 3000)
-  credentials: true
-}));
+  origin: [
+    "http://localhost:5173",
+    "https://solicitador-transporte-3-0.vercel.app"
+  ]
+}))
 
 // Configuração de sessão PRIMEIRO
 app.use(session({
