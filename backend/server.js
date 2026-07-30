@@ -22,15 +22,21 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "https://solicitador-transporte-3-0.vercel.app"
-  ]
-}))
-
+  ],
+  credentials: true
+}));
 // Configuração de sessão PRIMEIRO
+app.set('trust proxy', 1);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'sepror-solicitacoes-secret-2025',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, maxAge: 8 * 60 * 60 * 1000 } // 8 horas
+  cookie: {
+    secure: true,
+    sameSite: 'none',
+    maxAge: 8 * 60 * 60 * 1000
+  }
 }));
 
 // ==============================================
