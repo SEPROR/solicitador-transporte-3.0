@@ -2,7 +2,6 @@ import { Send, User, Building2, MapPin, Clock, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import styles from './index.module.css';
 
-// Ajuste conforme onde o servidor está rodando (porta 2999 por padrão)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 
 export function TicketForm() {
@@ -18,7 +17,6 @@ export function TicketForm() {
   const [status, setStatus] = useState({ tipo: '', mensagem: '' });
   const [enviando, setEnviando] = useState(false);
 
-  // Carregar setores do backend ao montar o componente
   useEffect(() => {
     async function carregarSetores() {
       try {
@@ -173,10 +171,13 @@ export function TicketForm() {
             />
           </div>
 
-          <button type="submit" className={styles.submitButton} disabled={enviando}>
-            <Send className={styles.submitIcon} />
-            {enviando ? 'Enviando...' : 'Solicitar Transporte'}
-          </button>
+          {/* Wrapper para empurrar o botão para o canto inferior direito */}
+          <div className={styles.buttonWrapper}>
+            <button type="submit" className={styles.submitButton} disabled={enviando}>
+              <Send className={styles.submitIcon} />
+              {enviando ? 'Enviando...' : 'Solicitar'}
+            </button>
+          </div>
 
           {status.mensagem && (
             <p className={status.tipo === 'sucesso' ? styles.sucesso : styles.erro}>

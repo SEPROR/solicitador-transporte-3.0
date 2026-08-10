@@ -33,7 +33,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #2196a6;
+  background: #1a3a6b;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -45,7 +45,7 @@
 }
 
 .btnPrimary:hover {
-  background: #187a87;
+  background: #22477e;
 }
 
 .card {
@@ -75,7 +75,7 @@
   gap: 6px;
   background: none;
   border: none;
-  color: #2196a6;
+  color: #1a3a6b;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
