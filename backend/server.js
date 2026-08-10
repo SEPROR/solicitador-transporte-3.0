@@ -392,8 +392,10 @@ async function processarRespostaSolicitacao(
   }
 }
 
+///
+/// Excluir uma solicitação finalizada (exclusão definitiva) ///
+///
 
-/// Excluir uma solicitação finalizada (exclusão definitiva)
 app.delete('/api/solicitacao/:id', async (req, res) => {
   const { id } = req.params;
 
