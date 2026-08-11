@@ -10,8 +10,8 @@ const cors = require('cors');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
-const port = process.env.PORT || 2999;
-const host = process.env.HOST || '0.0.0.0';
+const port = process.env.PORT ;
+const host = process.env.HOST ;
 
 // Middleware
 app.use(bodyParser.json());
@@ -29,7 +29,7 @@ app.use(cors({
 app.set('trust proxy', 1);
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'sepror-solicitacoes-secret-2025',
+  secret: process.env.SESSION_SECRET ,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -45,8 +45,8 @@ app.use(session({
 
 // Credenciais simples
 const CREDENCIAIS = {
-  usuario: process.env.ADMIN_USER || 'admin',
-  senha: process.env.ADMIN_PASSWORD || 'admin123'
+  usuario: process.env.ADMIN_USER ,
+  senha: process.env.ADMIN_PASSWORD 
 };
 
 // Middleware para verificar autenticação
@@ -119,7 +119,7 @@ const pool = new Pool({
   port: process.env.DB_PORT ,
 });
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8732928264:AAHzM-tWPgtcL0r_PsnvYh9egUMI_g-YjKA';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ;
 
 // Variável para controle de polling
 let lastUpdateId = 0;
