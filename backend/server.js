@@ -112,11 +112,11 @@ app.use(verificarAutenticacao);
 
 // Configuração do banco de dados
 const pool = new Pool({
-  user: process.env.DB_USER || 'postgres.zqtlmqjbezqxsygkgstc',
-  host: process.env.DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
-  database: process.env.DB_NAME || 'postgres',
-  password: process.env.DB_PASSWORD || 's3pr0r@m!*@',
-  port: process.env.DB_PORT || 6543,
+  user: process.env.DB_USER ,
+  host: process.env.DB_HOST ,
+  database: process.env.DB_NAME ,
+  password: process.env.DB_PASSWORD ,
+  port: process.env.DB_PORT ,
 });
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8732928264:AAHzM-tWPgtcL0r_PsnvYh9egUMI_g-YjKA';
