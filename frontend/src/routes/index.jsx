@@ -5,6 +5,7 @@ import Manager from '../pages/Manager/Manager';
 import Login from '../pages/Login/Login';
 import Relatorio from '../pages/Relatorio/Relatorio';
 import Motoristas from '../pages/Motorista/Motorista';
+import Login2 from '../pages/Login2/Login2'
 
 const AppRoutes = () => {
     return (
@@ -16,6 +17,7 @@ const AppRoutes = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/relatorio" element={<Relatorio />} />
                 <Route path="/motoristas" element={<Motoristas />} />
+                <Route path="/login2" element={<Login2 />} />
             </Routes>
         </BrowserRouter>
     )
