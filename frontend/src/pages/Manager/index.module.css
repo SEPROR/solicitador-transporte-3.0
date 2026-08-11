@@ -5,14 +5,14 @@
 
 .container {
   max-width: 960px;
-  margin: 60px auto 2rem auto;
+  margin: 40px auto 2rem auto;
   padding: 32px 24px;
   color: #111827;
 }
 
 .title {
   margin-bottom: 24px;
-  font-size: 2rem;
+  font-size: 1.70rem;
   font-weight: 600;
   color: #111827;
 }
