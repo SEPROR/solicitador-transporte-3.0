@@ -13,8 +13,8 @@ console.log('Caminho do .env:', path.join(__dirname, '../.env'));
 console.log('Existe?', require('fs').existsSync(path.join(__dirname, '../.env')));
 
 const app = express();
-const port = process.env.PORT ;
-const host = process.env.HOST ;
+const port = process.env.PORT;
+const host = process.env.HOST;
 
 // Middleware
 app.use(bodyParser.json());
@@ -24,7 +24,6 @@ app.use(express.static('public'));
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://solicitador-transporte-3-0.vercel.app"
   ],
   credentials: true
 }));
@@ -32,7 +31,7 @@ app.use(cors({
 app.set('trust proxy', 1);
 
 app.use(session({
-  secret: process.env.SESSION_SECRET ,
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -48,8 +47,8 @@ app.use(session({
 
 // Credenciais simples
 const CREDENCIAIS = {
-  usuario: process.env.ADMIN_USER ,
-  senha: process.env.ADMIN_PASSWORD 
+  usuario: process.env.ADMIN_USER,
+  senha: process.env.ADMIN_PASSWORD
 };
 
 // Middleware para verificar autenticação
@@ -116,11 +115,11 @@ app.use(verificarAutenticacao);
 
 // Configuração do banco de dados
 const pool = new Pool({
-  user: process.env.DB_USER ,
-  host: process.env.DB_HOST ,
-  database: process.env.DB_NAME ,
-  password: process.env.DB_PASSWORD ,
-  port: process.env.DB_PORT ,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
 
 
@@ -139,8 +138,15 @@ async function getADClient() {
     domainDN: process.env.AD_DOMAIN_DN,
     searchBase: process.env.AD_SEARCH_BASE,
     searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName'],
-    tlsOptions: { rejectUnauthorized: false },
+    tlsOptions: process.env.AD_CA_PATH
+      ? { ca: fs.readFileSync(path.join(__dirname, process.env.AD_CA_PATH)) }
+      : undefined,
     reconnect: true,
+  });
+
+  // ADICIONAR ISSO: evita que erros de conexão derrubem o servidor inteiro
+  adInstance.on('error', (err) => {
+    console.error('Erro de conexão com o AD (não fatal):', err.message);
   });
 
   return adInstance;
@@ -150,7 +156,7 @@ const AD_ADMIN_GROUP_DN = process.env.AD_ADMIN_GROUP_DN;
 
 
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ;
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 // Variável para controle de polling
 let lastUpdateId = 0;
@@ -404,16 +410,16 @@ async function processarRespostaSolicitacao(
       `Status: ${finalizado}\n\n` +
       `O solicitante foi levado ao destino informado.`
     );
- 
+
     console.log(`✅ Solicitação #${solicitacaoId} finalizada via Telegram`);
- 
+
   } catch (error) {
     // Log completo com stack trace — essencial para identificar
     // se o erro é de banco (coluna inexistente, constraint, etc.)
     // ou de API do Telegram
     console.error('❌ Erro ao processar resposta:', error.message);
     console.error(error.stack);
- 
+
     await enviarMensagemTelegram(
       chatId,
       '❌ ERRO AO FINALIZAR TRANSPORTE\n\n' +
@@ -1134,7 +1140,7 @@ app.get('/api/motoristas/todos', async (req, res) => {
 
 // Criar um novo motorista
 app.post('/api/motoristas', async (req, res) => {
-  const { nome, whatsapp, usuario_login } = req.body; 
+  const { nome, whatsapp, usuario_login } = req.body;
 
   try {
     // Gerar um nome de usuário padrão se não fornecido
