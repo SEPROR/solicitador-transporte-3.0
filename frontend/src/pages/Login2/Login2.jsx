@@ -50,24 +50,35 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999'
 
-    try {
-      // TODO: substitua pelo seu serviço de autenticação AD
-      // Exemplo:
-      // await authService.loginWithAD({ username, password })
-      // router.push('/dashboard')
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  setError('')
+  setLoading(true)
 
-      console.log('Credenciais para autenticação AD:', { username, password })
-    } catch (err) {
-      setError(err?.message ?? 'Usuário ou senha inválidos. Tente novamente.')
-    } finally {
-      setLoading(false)
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/login-ad`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // importante: envia/recebe cookie de sessão
+      body: JSON.stringify({ usuario: username, senha: password }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Usuário ou senha inválidos.')
     }
+
+    // redireciona conforme o papel do usuário (ver seção 3)
+    window.location.href = data.redirectTo || '/dashboard'
+  } catch (err) {
+    setError(err?.message ?? 'Não foi possível autenticar. Tente novamente.')
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className={styles.page}>
