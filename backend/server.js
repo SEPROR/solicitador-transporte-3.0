@@ -7,7 +7,10 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+// Adicione temporariamente para debugar:
+console.log('Caminho do .env:', path.join(__dirname, '../.env'));
+console.log('Existe?', require('fs').existsSync(path.join(__dirname, '../.env')));
 
 const app = express();
 const port = process.env.PORT ;
@@ -54,6 +57,7 @@ function verificarAutenticacao(req, res, next) {
   // Não requer autenticação para rotas públicas
   const rotasPublicas = [
     '/api/login',
+    '/api/login-ad',
     '/api/logout',
     '/api/auth/status',
     '/api/motoristas',
@@ -118,6 +122,35 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD ,
   port: process.env.DB_PORT ,
 });
+
+
+
+/// configuração do AD ///
+const ADAuth = require('adauth');
+const fs = require('fs');
+
+let adInstance = null;
+
+async function getADClient() {
+  if (adInstance) return adInstance;
+
+  adInstance = await ADAuth.create({
+    url: process.env.AD_URL,
+    domainDN: process.env.AD_DOMAIN_DN,
+    searchBase: process.env.AD_SEARCH_BASE,
+    searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName'],
+    tlsOptions: process.env.AD_CA_PATH
+      ? { ca: fs.readFileSync(process.env.AD_CA_PATH) }
+      : undefined,
+    reconnect: true,
+  });
+
+  return adInstance;
+}
+
+const AD_ADMIN_GROUP_DN = process.env.AD_ADMIN_GROUP_DN;
+
+
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ;
 
@@ -706,6 +739,47 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+/// rota login AD
+app.post('/api/login-ad', async (req, res) => {
+  const { usuario, senha } = req.body;
+
+  if (!usuario || !senha) {
+    return res.status(400).json({ success: false, error: 'Usuário e senha são obrigatórios' });
+  }
+
+  try {
+    const ad = await getADClient();
+    const user = await ad.authenticate(usuario, senha);
+
+    const groups = Array.isArray(user.memberOf)
+      ? user.memberOf
+      : (user.memberOf ? [user.memberOf] : []);
+
+    const isAdmin = groups.some((g) => g.toLowerCase() === AD_ADMIN_GROUP_DN.toLowerCase());
+
+    req.session.autenticado = true;
+    req.session.usuario = user.displayName || user.sAMAccountName;
+    req.session.isAdmin = isAdmin;
+    req.session.nivelAcesso = isAdmin ? 'ADMIN' : 'USER';
+
+    return res.json({
+      success: true,
+      message: 'Login realizado com sucesso',
+      isAdmin,
+      usuario: user.displayName || user.sAMAccountName
+    });
+
+  } catch (error) {
+    console.error('Erro na autenticação AD:', error.message);
+    return res.status(401).json({
+      success: false,
+      error: 'Usuário ou senha inválidos'
+    });
+  }
+});
+
+
+
 // Rota de logout
 app.post('/api/logout', (req, res) => {
   req.session.destroy((err) => {
@@ -1056,13 +1130,13 @@ app.get('/api/motoristas/todos', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar técnicos' });
+    res.status(500).json({ error: 'Erro ao buscar motoristas' });
   }
 });
 
-// Criar um novo técnico
+// Criar um novo motorista
 app.post('/api/motoristas', async (req, res) => {
-  const { nome, whatsapp, usuario_login } = req.body;
+  const { nome, whatsapp, usuario_login } = req.body; 
 
   try {
     // Gerar um nome de usuário padrão se não fornecido
@@ -1077,11 +1151,11 @@ app.post('/api/motoristas', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro ao criar técnico' });
+    res.status(500).json({ error: 'Erro ao criar motorista' });
   }
 });
 
-// Atualizar um técnico
+// Atualizar um motorista
 app.put('/api/motoristas/:id', async (req, res) => {
   const { id } = req.params;
   const { nome, whatsapp, ativo } = req.body;
@@ -1096,11 +1170,11 @@ app.put('/api/motoristas/:id', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro ao atualizar técnico' });
+    res.status(500).json({ error: 'Erro ao atualizar motorista' });
   }
 });
 
-// Excluir um técnico (exclusão lógica)
+// Excluir um motorista (exclusão lógica)
 app.delete('/api/motoristas/:id', async (req, res) => {
   const { id } = req.params;
 
