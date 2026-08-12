@@ -139,9 +139,7 @@ async function getADClient() {
     domainDN: process.env.AD_DOMAIN_DN,
     searchBase: process.env.AD_SEARCH_BASE,
     searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName'],
-    tlsOptions: process.env.AD_CA_PATH
-      ? { ca: fs.readFileSync(process.env.AD_CA_PATH) }
-      : undefined,
+    tlsOptions: { rejectUnauthorized: false },
     reconnect: true,
   });
 
