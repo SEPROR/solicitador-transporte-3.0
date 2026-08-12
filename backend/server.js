@@ -126,7 +126,7 @@ const pool = new Pool({
 
 
 /// configuração do AD ///
-const ADAuth = require('adauth');
+const ADAuth = require('adauth').default;
 const fs = require('fs');
 
 let adInstance = null;
