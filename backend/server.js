@@ -35,8 +35,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production', // true só em produção com HTTPS
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 8 * 60 * 60 * 1000
   }
 }));
@@ -124,7 +124,7 @@ const pool = new Pool({
 
 
 
-/// configuração do AD ///
+/// configuração login do AD ///
 const ADAuth = require('adauth').default;
 const fs = require('fs');
 
@@ -137,11 +137,12 @@ async function getADClient() {
     url: process.env.AD_URL,
     domainDN: process.env.AD_DOMAIN_DN,
     searchBase: process.env.AD_SEARCH_BASE,
+
     searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName'],
-    tlsOptions: process.env.AD_CA_PATH
-      ? { ca: fs.readFileSync(path.join(__dirname, process.env.AD_CA_PATH)) }
-      : undefined,
+   connectTimeout: 5000, // 5 segundos
+    timeout: 5000,
     reconnect: true,
+    referrals: { enabled: false }
   });
 
   // ADICIONAR ISSO: evita que erros de conexão derrubem o servidor inteiro
@@ -747,6 +748,8 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/login-ad', async (req, res) => {
   const { usuario, senha } = req.body;
 
+  console.log('Recebeu tentativa de login:', usuario)
+
   if (!usuario || !senha) {
     return res.status(400).json({ success: false, error: 'Usuário e senha são obrigatórios' });
   }
@@ -770,7 +773,8 @@ app.post('/api/login-ad', async (req, res) => {
       success: true,
       message: 'Login realizado com sucesso',
       isAdmin,
-      usuario: user.displayName || user.sAMAccountName
+      usuario: user.displayName || user.sAMAccountName,
+      redirectTo: isAdmin ? '/manager' : '/relatorio'
     });
 
   } catch (error) {

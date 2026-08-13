@@ -72,7 +72,7 @@ const handleSubmit = async (e) => {
     }
 
     // redireciona conforme o papel do usuário (ver seção 3)
-    window.location.href = data.redirectTo || '/dashboard'
+    window.location.href = data.redirectTo || '/manager'
   } catch (err) {
     setError(err?.message ?? 'Não foi possível autenticar. Tente novamente.')
   } finally {
