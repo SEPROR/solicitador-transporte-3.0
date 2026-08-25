@@ -125,6 +125,7 @@ const pool = new Pool({
 
 
 /// configuração login do AD ///
+/// configuração login do AD ///
 const ADAuth = require('adauth').default;
 const fs = require('fs');
 
@@ -139,7 +140,7 @@ async function getADClient() {
     searchBase: process.env.AD_SEARCH_BASE,
 
     searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName'],
-   connectTimeout: 5000, // 5 segundos
+    connectTimeout: 5000, // 5 segundos
     timeout: 5000,
     reconnect: true,
     referrals: { enabled: false }
@@ -155,7 +156,26 @@ async function getADClient() {
 
 const AD_ADMIN_GROUP_DN = process.env.AD_ADMIN_GROUP_DN;
 
+// ADICIONAR ISSO: permite o usuário digitar só o username, sem prefixo de organização
+const AD_ORG_PREFIX = process.env.AD_ORG_PREFIX; // ex: "empresa.com"
 
+function normalizeUsername(input) {
+  if (!input) return input;
+  let user = input.trim();
+
+  if (user.includes('\\')) {
+    user = user.split('\\').pop();
+  }
+  if (user.includes('@')) {
+    user = user.split('@')[0];
+  }
+
+  if (AD_ORG_PREFIX) {
+    return `${user}@${AD_ORG_PREFIX}`; // formato UPN
+  }
+
+  return user;
+}
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -756,7 +776,8 @@ app.post('/api/login-ad', async (req, res) => {
 
   try {
     const ad = await getADClient();
-    const user = await ad.authenticate(usuario, senha);
+    const loginNormalizado = normalizeUsername(usuario); // <-- ADICIONADO
+    const user = await ad.authenticate(loginNormalizado, senha); // <-- USA o normalizado
 
     const groups = Array.isArray(user.memberOf)
       ? user.memberOf
