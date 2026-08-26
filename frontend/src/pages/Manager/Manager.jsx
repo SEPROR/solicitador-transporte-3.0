@@ -47,14 +47,14 @@ export default function Manager() {
         const data = await response.json();
 
         if (!data.autenticado) {
-          navigate('/login');
+          navigate('/login2');
           return;
         }
 
         await carregarSolicitacoes();
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
-        navigate('/login');
+        navigate('/login2');
       } finally {
         setCarregando(false);
       }

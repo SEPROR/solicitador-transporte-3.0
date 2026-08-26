@@ -84,7 +84,7 @@ export function Header() {
                     <div className={styles.dropdownDivider} />
 
                     {/* Itens do Menu com Navegação */}
-                    <Link to="/" onClick={() => setOpen(false)} className={styles.dropdownItem}>
+                    <Link to="/chamado" onClick={() => setOpen(false)} className={styles.dropdownItem}>
                       Solicitação de transporte
                     </Link>
 
