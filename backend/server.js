@@ -8,9 +8,6 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-// Adicione temporariamente para debugar:
-console.log('Caminho do .env:', path.join(__dirname, '../.env'));
-console.log('Existe?', require('fs').existsSync(path.join(__dirname, '../.env')));
 
 const app = express();
 const port = process.env.PORT;
@@ -27,6 +24,7 @@ app.use(cors({
   ],
   credentials: true
 }));
+
 // Configuração de sessão PRIMEIRO
 app.set('trust proxy', 1);
 
@@ -44,12 +42,6 @@ app.use(session({
 // ==============================================
 // MIDDLEWARE DE AUTENTICAÇÃO
 // ==============================================
-
-// Credenciais simples
-const CREDENCIAIS = {
-  usuario: process.env.ADMIN_USER,
-  senha: process.env.ADMIN_PASSWORD
-};
 
 // Middleware para verificar autenticação
 function verificarAutenticacao(req, res, next) {
@@ -113,6 +105,35 @@ function verificarAutenticacao(req, res, next) {
 // Aplicar middleware de autenticação
 app.use(verificarAutenticacao);
 
+// ==============================================
+// MIDDLEWARE DE AUTORIZAÇÃO POR SETOR (NOVO)
+// ==============================================
+// Autenticação (AD) só confirma "quem é você".
+// Estes middlewares controlam "o que você pode ver/fazer".
+
+// Só permite acesso a admins (grupo AD_ADMIN_GROUP_DN)
+function apenasAdmin(req, res, next) {
+  if (req.session && req.session.isAdmin) {
+    return next();
+  }
+  if (req.path.startsWith('/api/')) {
+    return res.status(403).json({ error: 'Apenas administradores podem acessar este recurso' });
+  }
+  return res.redirect('/login.html');
+}
+
+// Permite acesso a admins OU membros do setor GILOG
+// (GILOG visualiza as telas de gerenciamento; outros setores não)
+function apenasGilog(req, res, next) {
+  if (req.session && (req.session.isAdmin || req.session.isGilog)) {
+    return next();
+  }
+  if (req.path.startsWith('/api/')) {
+    return res.status(403).json({ error: 'Acesso restrito ao setor GILOG' });
+  }
+  return res.redirect('/login.html');
+}
+
 // Configuração do banco de dados
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -122,12 +143,8 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-
-
-/// configuração login do AD ///
 /// configuração login do AD ///
 const ADAuth = require('adauth').default;
-const fs = require('fs');
 
 let adInstance = null;
 
@@ -146,7 +163,7 @@ async function getADClient() {
     referrals: { enabled: false }
   });
 
-  // ADICIONAR ISSO: evita que erros de conexão derrubem o servidor inteiro
+  // Evita que erros de conexão derrubem o servidor inteiro
   adInstance.on('error', (err) => {
     console.error('Erro de conexão com o AD (não fatal):', err.message);
   });
@@ -154,9 +171,14 @@ async function getADClient() {
   return adInstance;
 }
 
+// Grupo do AD que dá acesso total de administrador
 const AD_ADMIN_GROUP_DN = process.env.AD_ADMIN_GROUP_DN;
 
-// ADICIONAR ISSO: permite o usuário digitar só o username, sem prefixo de organização
+// Grupo do AD do setor GILOG (visualiza as telas de gerenciamento,
+// mas não é necessariamente admin total — ajuste a regra conforme necessário)
+const AD_GILOG_GROUP_DN = process.env.AD_GILOG_GROUP_DN;
+
+// Permite o usuário digitar só o username, sem prefixo de organização
 const AD_ORG_PREFIX = process.env.AD_ORG_PREFIX; // ex: "empresa.com"
 
 function normalizeUsername(input) {
@@ -277,16 +299,6 @@ async function enviarMensagemTelegram(chatId, texto, parseMode = null) {
     console.error('❌ Erro ao enviar mensagem:', error.response?.data || error.message);
   }
 }
-
-// async function checkTelegramMessages() {
-//   if (isPolling) return;
-//         text: texto,
-//       }
-//     );
-//   } catch (error) {
-//     console.error('❌ Erro ao enviar mensagem:', error.response?.data || error.message);
-//   }
-// }
 
 async function checkTelegramMessages() {
   if (isPolling) return;
@@ -435,9 +447,6 @@ async function processarRespostaSolicitacao(
     console.log(`✅ Solicitação #${solicitacaoId} finalizada via Telegram`);
 
   } catch (error) {
-    // Log completo com stack trace — essencial para identificar
-    // se o erro é de banco (coluna inexistente, constraint, etc.)
-    // ou de API do Telegram
     console.error('❌ Erro ao processar resposta:', error.message);
     console.error(error.stack);
 
@@ -454,12 +463,8 @@ async function processarRespostaSolicitacao(
 /// Excluir uma solicitação finalizada (exclusão definitiva) ///
 ///
 
-app.delete('/api/solicitacao/:id', async (req, res) => {
+app.delete('/api/solicitacao/:id', apenasAdmin, async (req, res) => {
   const { id } = req.params;
-
-  if (!req.session.isAdmin) {
-    return res.status(403).json({ error: 'Apenas administradores podem excluir solicitações' });
-  }
 
   try {
     // Buscar a solicitação para verificar o status
@@ -495,7 +500,6 @@ app.delete('/api/solicitacao/:id', async (req, res) => {
     });
   }
 });
-
 
 // Processar registro do técnico
 async function processarRegistro(chatId) {
@@ -547,6 +551,7 @@ async function processarRegistro(chatId) {
     );
   }
 }
+
 // Processar vinculação
 async function processarVinculacao(chatId, texto) {
   try {
@@ -673,29 +678,16 @@ async function listarSolicitacoesMotorista(chatId) {
     );
   }
 }
+
 // ==============================================
 // ROTAS DE AUTENTICAÇÃO
 // ==============================================
 
-// Rota de login
+// Rota de login (SOMENTE motoristas/técnicos — login admin fixo removido)
 app.post('/api/login', async (req, res) => {
   const { usuario, senha } = req.body;
 
   try {
-    // Verificar se é o admin
-    if (usuario === CREDENCIAIS.usuario && senha === CREDENCIAIS.senha) {
-      req.session.autenticado = true;
-      req.session.usuario = usuario;
-      req.session.nivelAcesso = 'ADMIN';
-      req.session.isAdmin = true;
-
-      return res.json({
-        success: true,
-        message: 'Login realizado com sucesso',
-        isAdmin: true
-      });
-    }
-
     // Verificar se é um técnico
     const motoristaResult = await pool.query(
       `SELECT m.id, m.nome, m.usuario_login, m.senha_hash, n.codigo_acesso as nivel_acesso
@@ -718,6 +710,7 @@ app.post('/api/login', async (req, res) => {
           req.session.usuarioId = motorista.id;
           req.session.nivelAcesso = motorista.nivel_acesso;
           req.session.isAdmin = false;
+          req.session.isGilog = false;
 
           return res.json({
             success: true,
@@ -730,23 +723,13 @@ app.post('/api/login', async (req, res) => {
         }
       }
 
-      // Se não tem senha_hash ou a senha não confere, verificar senha padrão
-      if (senha === 'senha123') {
-        req.session.autenticado = true;
-        req.session.usuario = motorista.nome;
-        req.session.usuarioId = motorista.id;
-        req.session.nivelAcesso = motorista.nivel_acesso;
-        req.session.isAdmin = false;
-
-        return res.json({
-          success: true,
-          message: 'Login realizado com sucesso',
-          isAdmin: false,
-          nivelAcesso: motorista.nivel_acesso,
-          usuario: motorista.nome,
-          usuarioId: motorista.id
-        });
-      }
+      // ATENÇÃO: fallback de senha padrão ('senha123') foi REMOVIDO por
+      // ser uma falha de segurança (qualquer um logaria como o técnico
+      // que ainda não tem senha_hash definido). Se algum técnico ainda
+      // está sem senha_hash, o correto é forçar a definição de uma senha
+      // própria (ex: rota de "primeiro acesso"), não aceitar uma senha
+      // universal. Se quiser reativar temporariamente, adicione de volta
+      // o bloco `if (senha === 'senha123') {...}` aqui — mas não é recomendado.
     }
 
     // Se não encontrou usuário ou senha incorreta
@@ -764,11 +747,11 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-/// rota login AD
+/// rota login AD (admins e GILOG entram por aqui)
 app.post('/api/login-ad', async (req, res) => {
   const { usuario, senha } = req.body;
 
-  console.log('Recebeu tentativa de login:', usuario)
+  console.log('Recebeu tentativa de login:', usuario);
 
   if (!usuario || !senha) {
     return res.status(400).json({ success: false, error: 'Usuário e senha são obrigatórios' });
@@ -776,26 +759,31 @@ app.post('/api/login-ad', async (req, res) => {
 
   try {
     const ad = await getADClient();
-    const loginNormalizado = normalizeUsername(usuario); // <-- ADICIONADO
-    const user = await ad.authenticate(loginNormalizado, senha); // <-- USA o normalizado
+    const loginNormalizado = normalizeUsername(usuario);
+    const user = await ad.authenticate(loginNormalizado, senha);
 
     const groups = Array.isArray(user.memberOf)
       ? user.memberOf
       : (user.memberOf ? [user.memberOf] : []);
 
     const isAdmin = groups.some((g) => g.toLowerCase() === AD_ADMIN_GROUP_DN.toLowerCase());
+    const isGilog = AD_GILOG_GROUP_DN
+      ? groups.some((g) => g.toLowerCase() === AD_GILOG_GROUP_DN.toLowerCase())
+      : false;
 
     req.session.autenticado = true;
     req.session.usuario = user.displayName || user.sAMAccountName;
     req.session.isAdmin = isAdmin;
-    req.session.nivelAcesso = isAdmin ? 'ADMIN' : 'USER';
+    req.session.isGilog = isGilog;
+    req.session.nivelAcesso = isAdmin ? 'ADMIN' : (isGilog ? 'GILOG' : 'USER');
 
     return res.json({
       success: true,
       message: 'Login realizado com sucesso',
       isAdmin,
+      isGilog,
       usuario: user.displayName || user.sAMAccountName,
-      redirectTo: isAdmin ? '/manager' : '/relatorio'
+      redirectTo: (isAdmin || isGilog) ? '/manager' : '/relatorio'
     });
 
   } catch (error) {
@@ -806,8 +794,6 @@ app.post('/api/login-ad', async (req, res) => {
     });
   }
 });
-
-
 
 // Rota de logout
 app.post('/api/logout', (req, res) => {
@@ -833,9 +819,11 @@ app.get('/api/auth/status', (req, res) => {
     usuario: req.session.usuario,
     usuarioId: req.session.usuarioId || null,
     isAdmin: req.session.isAdmin || false,
+    isGilog: req.session.isGilog || false,
     nivelAcesso: req.session.nivelAcesso || null
   });
 });
+
 // ==============================================
 // ROTAS DA API
 // ==============================================
@@ -880,7 +868,6 @@ app.post('/api/solicitacao', async (req, res) => {
   const { usuario_nome, destino, setor_id, data, hora } = req.body;
 
   try {
-    // Inserir solicitação sem técnico designado
     const result = await pool.query(
       `INSERT INTO solicitacoes (usuario_nome, destino, data, hora, setor_id, status)
        VALUES ($1, $2, $3, $4, $5, $6)
@@ -944,7 +931,6 @@ app.put('/api/solicitacao/:id/designar', async (req, res) => {
 
     const solicitacao = result.rows[0];
 
-    // Buscar informações completas para notificação
     const solicitacaoCompleta = await pool.query(
       `
       SELECT s.*, m.nome as motorista_nome, setor.nome as setor_nome
@@ -955,7 +941,7 @@ app.put('/api/solicitacao/:id/designar', async (req, res) => {
       `,
       [solicitacao.id]
     );
-    // Enviar notificação para o Telegram
+
     if (solicitacaoCompleta.rows[0].motorista_id) {
       enviarParaTelegram(
         motorista_id,
@@ -978,7 +964,6 @@ app.get('/api/solicitacao', async (req, res) => {
   try {
     const { status } = req.query;
 
-    // Verificar se o usuário está autenticado e seu nível de acesso
     const isAdmin = req.session.isAdmin || false;
     const nivelAcesso = req.session.nivelAcesso;
     const usuarioId = req.session.usuarioId;
@@ -995,25 +980,23 @@ app.get('/api/solicitacao', async (req, res) => {
     let params = [];
     let whereConditions = [];
 
-    // Aplicar filtro de nível de acesso
+    // CORRIGIDO: alias errado "c.motorista_id" -> "s.motorista_id"
+    // (a query usa "FROM solicitacoes s", não existe alias "c")
     if (
       !isAdmin &&
       nivelAcesso &&
       ['N1', 'N2'].includes(nivelAcesso) &&
       usuarioId
     ) {
-      // Para N1 e N2: mostrar apenas solicitações designadas para eles
-      whereConditions.push('(c.motorista_id = $1 OR s.status = $2)');
+      whereConditions.push('(s.motorista_id = $1 OR s.status = $2)');
       params.push(usuarioId, 'aberto');
     }
 
-    // Aplicar filtro de status se fornecido
     if (status) {
-      whereConditions.push('c.status = $' + (params.length + 1));
+      whereConditions.push('s.status = $' + (params.length + 1));
       params.push(status);
     }
 
-    // Combinar condições WHERE
     if (whereConditions.length > 0) {
       query += ' WHERE ' + whereConditions.join(' AND ');
     }
@@ -1047,27 +1030,6 @@ app.put('/api/solicitacao/:id', async (req, res) => {
 
     } else if (status === 'redirecionado') {
 
-      // Primeiro, obter o técnico atual para salvar como anterior - antigo/28/05
-
-      // const solicitacaoAtual = await pool.query(
-      //   'SELECT motorista_id FROM solicitacoes WHERE id = $1',
-      //   [id]
-      // );
-
-      // const motoristaAnteriorId =
-      //   solicitacaoAtual.rows[0].motorista_id;
-
-      // query =
-      //   'UPDATE solicitacoes SET status = $1, motorista_anterior_id = $2, motorista_id = $3 WHERE id = $4 RETURNING *';
-
-      // values = [
-      //   'em_andamento',
-      //   motoristaAnteriorId,
-      //   motorista_id,
-      //   id
-      // ];
-
-      // Buscar motorista atual
       const solicitacaoAtual = await pool.query(
         'SELECT motorista_id FROM solicitacoes WHERE id = $1',
         [id]
@@ -1076,7 +1038,6 @@ app.put('/api/solicitacao/:id', async (req, res) => {
       const motoristaAnteriorId =
         solicitacaoAtual.rows[0].motorista_id;
 
-      // Atualizar solicitação
       query = `
     UPDATE solicitacoes 
     SET 
@@ -1094,26 +1055,18 @@ app.put('/api/solicitacao/:id', async (req, res) => {
         id
       ];
 
-
-
     } else {
       query =
         'UPDATE solicitacoes SET status = $1 WHERE id = $2 RETURNING *';
       values = [status, id];
     }
 
-    // const result = await pool.query(query, values);
-    // res.json(result.rows[0]); antigo/28/05
-
     const result = await pool.query(query, values);
 
     const solicitacaoAtualizada = result.rows[0];
 
-    // Se foi redirecionamento, enviar nova notificação
     if (status === 'redirecionado') {
-
       try {
-
         await enviarParaTelegram(
           motorista_id,
           solicitacaoAtualizada
@@ -1124,12 +1077,10 @@ app.put('/api/solicitacao/:id', async (req, res) => {
         );
 
       } catch (telegramError) {
-
         console.error(
           'Erro ao enviar Telegram após redirecionamento:',
           telegramError
         );
-
       }
     }
 
@@ -1142,10 +1093,13 @@ app.put('/api/solicitacao/:id', async (req, res) => {
     });
   }
 });
-// Gerenciamento de Técnicos
+
+// ==============================================
+// Gerenciamento de Técnicos (restrito a GILOG/Admin)
+// ==============================================
 
 // Obter todos os técnicos (incluindo inativos)
-app.get('/api/motoristas/todos', async (req, res) => {
+app.get('/api/motoristas/todos', apenasGilog, async (req, res) => {
   try {
     const query = `
       SELECT m.*, n.nome as nivel_nome, n.codigo_acesso
@@ -1163,12 +1117,11 @@ app.get('/api/motoristas/todos', async (req, res) => {
   }
 });
 
-// Criar um novo motorista
-app.post('/api/motoristas', async (req, res) => {
+// Criar um novo técnico
+app.post('/api/motoristas', apenasGilog, async (req, res) => {
   const { nome, whatsapp, usuario_login } = req.body;
 
   try {
-    // Gerar um nome de usuário padrão se não fornecido
     const login = usuario_login || nome.toLowerCase().replace(/\s+/g, '.');
 
     const result = await pool.query(
@@ -1184,31 +1137,11 @@ app.post('/api/motoristas', async (req, res) => {
   }
 });
 
-// Atualizar um motorista
-app.put('/api/motoristas/:id', async (req, res) => {
-  const { id } = req.params;
-  const { nome, whatsapp, ativo } = req.body;
-
-  try {
-    const result = await pool.query(
-      'UPDATE motoristas SET nome = $1, whatsapp = $2, ativo = $3 WHERE id = $4 RETURNING *',
-      [nome, whatsapp, ativo, id]
-    );
-
-    res.json(result.rows[0]);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao atualizar motorista' });
-  }
-});
-
 // Excluir um motorista (exclusão lógica)
-app.delete('/api/motoristas/:id', async (req, res) => {
+app.delete('/api/motoristas/:id', apenasGilog, async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Verificar se o técnico está atribuído a alguma solicitação em andamento
     const solicitacoesResult = await pool.query(
       'SELECT COUNT(*) FROM solicitacoes WHERE motorista_id = $1 AND status != $2',
       [id, 'fechado']
@@ -1221,7 +1154,6 @@ app.delete('/api/motoristas/:id', async (req, res) => {
       });
     }
 
-    // Fazer exclusão lógica
     const result = await pool.query(
       'UPDATE motoristas SET ativo = FALSE WHERE id = $1 RETURNING *',
       [id]
@@ -1238,10 +1170,12 @@ app.delete('/api/motoristas/:id', async (req, res) => {
   }
 });
 
-// Gerenciamento de Setores
+// ==============================================
+// Gerenciamento de Setores (restrito a GILOG/Admin)
+// ==============================================
 
 // Obter todos os setores (incluindo inativos)
-app.get('/api/setores/todos', async (req, res) => {
+app.get('/api/setores/todos', apenasGilog, async (req, res) => {
   try {
     const result = await pool.query(
       'SELECT * FROM setores ORDER BY nome'
@@ -1254,8 +1188,9 @@ app.get('/api/setores/todos', async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar setores' });
   }
 });
+
 // Criar um novo setor
-app.post('/api/setores', async (req, res) => {
+app.post('/api/setores', apenasGilog, async (req, res) => {
   const { nome } = req.body;
 
   try {
@@ -1273,7 +1208,7 @@ app.post('/api/setores', async (req, res) => {
 });
 
 // Atualizar um setor
-app.put('/api/setores/:id', async (req, res) => {
+app.put('/api/setores/:id', apenasGilog, async (req, res) => {
   const { id } = req.params;
   const { nome, ativo } = req.body;
 
@@ -1292,11 +1227,10 @@ app.put('/api/setores/:id', async (req, res) => {
 });
 
 // Excluir um setor (exclusão lógica)
-app.delete('/api/setores/:id', async (req, res) => {
+app.delete('/api/setores/:id', apenasGilog, async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Verificar se o setor está atribuído a alguma solicitação
     const solicitacoesResult = await pool.query(
       'SELECT COUNT(*) FROM solicitacoes WHERE setor_id = $1',
       [id]
@@ -1309,7 +1243,6 @@ app.delete('/api/setores/:id', async (req, res) => {
       });
     }
 
-    // Fazer exclusão lógica
     const result = await pool.query(
       'UPDATE setores SET ativo = FALSE WHERE id = $1 RETURNING *',
       [id]
@@ -1343,31 +1276,12 @@ app.get('/api/nivel-motorista', async (req, res) => {
   }
 });
 
-// Atualizar rota de criação de técnico
-app.post('/api/motoristas', async (req, res) => {
-  const { nome, whatsapp } = req.body;
-
-  try {
-    const result = await pool.query(
-      'INSERT INTO motoristas (nome, whatsapp) VALUES ($1, $2) RETURNING *',
-      [nome, whatsapp]
-    );
-
-    res.json(result.rows[0]);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao criar técnico' });
-  }
-});
-
-// Atualizar um técnico
-app.put('/api/motoristas/:id', async (req, res) => {
+// Atualizar um técnico (restrito a GILOG/Admin)
+app.put('/api/motoristas/:id', apenasGilog, async (req, res) => {
   const { id } = req.params;
   const {
     nome,
     whatsapp,
-    // nivel_id,
     ativo,
     usuario_login
   } = req.body;
@@ -1385,18 +1299,23 @@ app.put('/api/motoristas/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro ao atualizar técnico' });
   }
 });
+
 // Rota para alterar senha do técnico
 app.put('/api/motoristas/:id/senha', async (req, res) => {
   const { id } = req.params;
   const { senhaAtual, novaSenha } = req.body;
 
   try {
-    // Verificar se o usuário tem permissão para alterar esta senha
-    if (req.session.usuarioId !== parseInt(id) && !req.session.isAdmin) {
+    // Só o próprio técnico ou um admin/GILOG pode alterar
+    const podeAlterar =
+      req.session.usuarioId === parseInt(id) ||
+      req.session.isAdmin ||
+      req.session.isGilog;
+
+    if (!podeAlterar) {
       return res.status(403).json({ error: 'Permissão negada' });
     }
 
-    // Buscar técnico
     const motoristaResult = await pool.query(
       'SELECT * FROM motoristas WHERE id = $1',
       [id]
@@ -1408,7 +1327,6 @@ app.put('/api/motoristas/:id/senha', async (req, res) => {
 
     const motorista = motoristaResult.rows[0];
 
-    // Verificar senha atual
     if (motorista.senha_hash) {
       const senhaAtualValida = await bcrypt.compare(
         senhaAtual,
@@ -1420,22 +1338,16 @@ app.put('/api/motoristas/:id/senha', async (req, res) => {
           error: 'Senha atual incorreta'
         });
       }
-    } else {
-      if (senhaAtual !== 'senha123') {
-        return res.status(401).json({
-          error: 'Senha atual incorreta'
-        });
-      }
     }
+    // Nota: fallback de senha padrão 'senha123' removido aqui também,
+    // pelo mesmo motivo de segurança explicado em /api/login.
 
-    // Hash da nova senha
     const saltRounds = 10;
     const senhaHash = await bcrypt.hash(
       novaSenha,
       saltRounds
     );
 
-    // Atualizar senha no banco
     await pool.query(
       'UPDATE motoristas SET senha_hash = $1 WHERE id = $2',
       [senhaHash, id]

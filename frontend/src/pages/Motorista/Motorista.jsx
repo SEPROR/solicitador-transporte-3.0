@@ -44,14 +44,14 @@ export default function Motoristas() {
         const data = await response.json();
 
         if (!data.autenticado) {
-          navigate('/login');
+          navigate('/login2');
           return;
         }
 
         await carregarMotoristas();
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
-        navigate('/login');
+        navigate('/login2');
       } finally {
         setCarregandoPagina(false);
       }
