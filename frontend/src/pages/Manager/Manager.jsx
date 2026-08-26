@@ -17,7 +17,7 @@ export default function Manager() {
   const [filtroStatus, setFiltroStatus] = useState('');
 
   const carregarSolicitacoes = useCallback(async () => {
-    try {
+    try {                  
       const [solicitacaoResponse, authResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/api/solicitacao`, {
           credentials: 'include'
