@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from '../pages/Home/Home';
 import Setores from '../pages/Setores/Setores';
 import Manager from '../pages/Manager/Manager';
@@ -11,11 +11,13 @@ const AppRoutes = () => {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Login2 />} />
-                <Route path="/Home" element={<Home />} />
+                <Route path="/chamado" element={<Home />} />
                 <Route path="/setores" element={<Setores />} />
                 <Route path="/manager" element={<Manager />} />
                 <Route path="/relatorio" element={<Relatorio />} />
                 <Route path="/motoristas" element={<Motoristas />} />
+                <Route path="/login2" element={<Login2 />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
     )
