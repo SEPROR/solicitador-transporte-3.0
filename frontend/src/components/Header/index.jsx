@@ -1,19 +1,14 @@
 import { UserCircle, LogOut, ChevronDown, ArrowLeftRight } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import styles from './index.module.css';
-import { useAuth } from '../../context/AuthContext'; // ajuste o caminho conforme sua estrutura
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
+import { useAuth } from '../../context/AuthContext';
 
 export function Header() {
-  const [currentUser, setCurrentUser] = useState('Usuário');
-  const [isGilog, setIsGilog] = useState(false);
+  const { usuario, isGilog, logout } = useAuth();
+  const currentUser = usuario || 'Usuário';
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-
-  const navigate = useNavigate();
-  const { logout } = useAuth();
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -25,42 +20,9 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    async function fetchAuthStatus() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/status`, {
-          credentials: 'include',
-        });
-        const data = await res.json();
-        if (data.usuario) setCurrentUser(data.usuario);
-        setIsGilog(!!data.isGilog);
-      } catch (err) {
-        console.error('Erro ao verificar autenticação:', err);
-      }
-    }
-    fetchAuthStatus();
-  }, []);
-
-const handleLogout = async () => {
-    try {
-      setOpen(false);
-
-      // 1. Notifica o servidor para destruir os cookies/sessão
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      // 2. Se o contexto tiver a função de logout para limpar o estado global
-      if (logout) {
-        await logout();
-      }
-
-      // 3. Redireciona o usuário para a página de login
-      navigate('/');
-    } catch (err) {
-      console.error('Erro ao realizar logout:', err);
-    }
+  const handleLogout = () => {
+    setOpen(false);
+    logout(); // já chama /api/logout, limpa o estado e redireciona
   };
 
   return (
@@ -127,7 +89,7 @@ const handleLogout = async () => {
 
                     {/* Visível para todos os usuários autenticados */}
                     <Link
-                      to="/chamado"
+                      to="/solicitacao"
                       onClick={() => setOpen(false)}
                       className={styles.dropdownItem}
                     >

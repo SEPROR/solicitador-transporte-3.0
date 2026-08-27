@@ -18,7 +18,7 @@ const AppRoutes = () => {
 
           {/* Acessível a qualquer usuário autenticado */}
           <Route
-            path="/chamado"
+            path="/solicitacao"
             element={
               <PrivateRoute>
                 <Home />

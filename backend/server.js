@@ -690,8 +690,9 @@ app.post('/api/login-ad', async (req, res) => {
       ? user.memberOf
       : (user.memberOf ? [user.memberOf] : []);
 
-    console.log('Grupos do usuário:', groups);
-    console.log('AD_GILOG_GROUP_DN configurado:', AD_GILOG_GROUP_DN);
+    //console para verificar qual grupo o usuário faz parte
+    // console.log('Grupos do usuário:', groups);
+    // console.log('AD_GILOG_GROUP_DN configurado:', AD_GILOG_GROUP_DN);
 
     const isAdmin = groups.some((g) => g.toLowerCase() === AD_ADMIN_GROUP_DN.toLowerCase());
     const isGilog = AD_GILOG_GROUP_DN
@@ -710,7 +711,7 @@ app.post('/api/login-ad', async (req, res) => {
       isAdmin,
       isGilog,
       usuario: user.displayName || user.sAMAccountName,
-      redirectTo: isGilog ? '/manager' : '/chamado'
+      redirectTo: isGilog ? '/manager' : '/solicitacao'
     });
 
   } catch (error) {
