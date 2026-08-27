@@ -47,7 +47,6 @@ app.use(session({
 function verificarAutenticacao(req, res, next) {
   // Não requer autenticação para rotas públicas
   const rotasPublicas = [
-    '/api/login',
     '/api/login-ad',
     '/api/logout',
     '/api/auth/status',
@@ -95,7 +94,7 @@ function verificarAutenticacao(req, res, next) {
       return res.status(401).json({ error: 'Não autorizado' });
     }
 
-    return res.redirect('/login.html');
+    return res.redirect('/login');
   }
 
   // Para todas as outras rotas não especificadas, permitir acesso
@@ -111,17 +110,6 @@ app.use(verificarAutenticacao);
 // Autenticação (AD) só confirma "quem é você".
 // Estes middlewares controlam "o que você pode ver/fazer".
 
-// Só permite acesso a admins (grupo AD_ADMIN_GROUP_DN)
-function apenasAdmin(req, res, next) {
-  if (req.session && req.session.isAdmin) {
-    return next();
-  }
-  if (req.path.startsWith('/api/')) {
-    return res.status(403).json({ error: 'Apenas administradores podem acessar este recurso' });
-  }
-  return res.redirect('/login.html');
-}
-
 // Permite acesso a admins OU membros do setor GILOG
 // (GILOG visualiza as telas de gerenciamento; outros setores não)
 function apenasGilog(req, res, next) {
@@ -131,7 +119,7 @@ function apenasGilog(req, res, next) {
   if (req.path.startsWith('/api/')) {
     return res.status(403).json({ error: 'Acesso restrito ao setor GILOG' });
   }
-  return res.redirect('/login.html');
+  return res.redirect('/login');
 }
 
 // Configuração do banco de dados
@@ -463,7 +451,7 @@ async function processarRespostaSolicitacao(
 /// Excluir uma solicitação finalizada (exclusão definitiva) ///
 ///
 
-app.delete('/api/solicitacao/:id', apenasAdmin, async (req, res) => {
+app.delete('/api/solicitacao/:id', apenasGilog, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -683,70 +671,6 @@ async function listarSolicitacoesMotorista(chatId) {
 // ROTAS DE AUTENTICAÇÃO
 // ==============================================
 
-// Rota de login (SOMENTE motoristas/técnicos — login admin fixo removido)
-app.post('/api/login', async (req, res) => {
-  const { usuario, senha } = req.body;
-
-  try {
-    // Verificar se é um técnico
-    const motoristaResult = await pool.query(
-      `SELECT m.id, m.nome, m.usuario_login, m.senha_hash, n.codigo_acesso as nivel_acesso
-       FROM motoristas m
-       LEFT JOIN nivel_tecnico n ON m.nivel_id = n.id
-       WHERE m.usuario_login = $1 AND m.ativo = TRUE`,
-      [usuario]
-    );
-
-    if (motoristaResult.rows.length > 0) {
-      const motorista = motoristaResult.rows[0];
-
-      // Verificar senha com bcrypt
-      if (motorista.senha_hash) {
-        const senhaValida = await bcrypt.compare(senha, motorista.senha_hash);
-
-        if (senhaValida) {
-          req.session.autenticado = true;
-          req.session.usuario = motorista.nome;
-          req.session.usuarioId = motorista.id;
-          req.session.nivelAcesso = motorista.nivel_acesso;
-          req.session.isAdmin = false;
-          req.session.isGilog = false;
-
-          return res.json({
-            success: true,
-            message: 'Login realizado com sucesso',
-            isAdmin: false,
-            nivelAcesso: motorista.nivel_acesso,
-            usuario: motorista.nome,
-            usuarioId: motorista.id
-          });
-        }
-      }
-
-      // ATENÇÃO: fallback de senha padrão ('senha123') foi REMOVIDO por
-      // ser uma falha de segurança (qualquer um logaria como o técnico
-      // que ainda não tem senha_hash definido). Se algum técnico ainda
-      // está sem senha_hash, o correto é forçar a definição de uma senha
-      // própria (ex: rota de "primeiro acesso"), não aceitar uma senha
-      // universal. Se quiser reativar temporariamente, adicione de volta
-      // o bloco `if (senha === 'senha123') {...}` aqui — mas não é recomendado.
-    }
-
-    // Se não encontrou usuário ou senha incorreta
-    res.status(401).json({
-      success: false,
-      error: 'Credenciais inválidas'
-    });
-
-  } catch (error) {
-    console.error('Erro no login:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro interno do servidor'
-    });
-  }
-});
-
 /// rota login AD (admins e GILOG entram por aqui)
 app.post('/api/login-ad', async (req, res) => {
   const { usuario, senha } = req.body;
@@ -766,6 +690,9 @@ app.post('/api/login-ad', async (req, res) => {
       ? user.memberOf
       : (user.memberOf ? [user.memberOf] : []);
 
+    console.log('Grupos do usuário:', groups);
+    console.log('AD_GILOG_GROUP_DN configurado:', AD_GILOG_GROUP_DN);
+
     const isAdmin = groups.some((g) => g.toLowerCase() === AD_ADMIN_GROUP_DN.toLowerCase());
     const isGilog = AD_GILOG_GROUP_DN
       ? groups.some((g) => g.toLowerCase() === AD_GILOG_GROUP_DN.toLowerCase())
@@ -775,7 +702,7 @@ app.post('/api/login-ad', async (req, res) => {
     req.session.usuario = user.displayName || user.sAMAccountName;
     req.session.isAdmin = isAdmin;
     req.session.isGilog = isGilog;
-    req.session.nivelAcesso = isAdmin ? 'ADMIN' : (isGilog ? 'GILOG' : 'USER');
+    req.session.nivelAcesso = isGilog ? 'GILOG' : 'USER';
 
     return res.json({
       success: true,
@@ -783,7 +710,7 @@ app.post('/api/login-ad', async (req, res) => {
       isAdmin,
       isGilog,
       usuario: user.displayName || user.sAMAccountName,
-      redirectTo: (isAdmin || isGilog) ? '/manager' : '/relatorio'
+      redirectTo: isGilog ? '/manager' : '/chamado'
     });
 
   } catch (error) {
