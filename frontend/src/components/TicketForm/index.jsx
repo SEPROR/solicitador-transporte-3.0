@@ -106,7 +106,7 @@ export function TicketForm() {
             />
           </div>
 
-          {/* <div className={styles.field}>
+          <div className={styles.field}>
             <label className={styles.label}>
               <Mail className={styles.labelIcon} />
               Email
@@ -120,7 +120,7 @@ export function TicketForm() {
               className={styles.input}
               required
             />
-          </div> */}
+          </div>
 
           <div className={styles.field}>
             <label className={styles.label}>
