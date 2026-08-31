@@ -1,4 +1,4 @@
-import { Send, User, Building2, MapPin, Clock, Calendar } from 'lucide-react';
+import { Send, User, Building2, MapPin, Clock, Calendar, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import styles from './index.module.css';
 
@@ -7,6 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 export function TicketForm() {
   const [formData, setFormData] = useState({
     usuario_nome: '',
+    email: '',
     setor_id: '',
     destino: '',
     data: '',
@@ -60,6 +61,7 @@ export function TicketForm() {
 
       setFormData({
         usuario_nome: '',
+        email: '',
         setor_id: '',
         destino: '',
         data: '',
@@ -103,6 +105,22 @@ export function TicketForm() {
               required
             />
           </div>
+
+          {/* <div className={styles.field}>
+            <label className={styles.label}>
+              <Mail className={styles.labelIcon} />
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="ana.silva@gmail.com"
+              className={styles.input}
+              required
+            />
+          </div> */}
 
           <div className={styles.field}>
             <label className={styles.label}>
