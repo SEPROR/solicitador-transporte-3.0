@@ -6,6 +6,7 @@ const axios = require('axios');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const nodemailer = require('nodemailer'); // <-- ADICIONADO
 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -130,6 +131,60 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
 });
+
+// ==============================================
+// CONFIGURAÇÃO DE E-MAIL (NOVO)
+// ==============================================
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
+
+// Envia e-mail de confirmação da solicitação para o solicitante.
+// Não derruba a criação da solicitação caso falhe — só loga o erro.
+async function enviarConfirmacaoEmail(solicitacao) {
+  if (!solicitacao.email) {
+    console.log(`⚠️ Solicitação #${solicitacao.id} sem e-mail informado, confirmação não enviada.`);
+    return;
+  }
+
+  try {
+    const setorResult = await pool.query(
+      'SELECT nome FROM setores WHERE id = $1',
+      [solicitacao.setor_id]
+    );
+    const setorNome = setorResult.rows.length > 0 ? setorResult.rows[0].nome : 'Não informado';
+
+    const dataFormatada = new Date(solicitacao.data).toLocaleDateString('pt-BR', {
+      timeZone: 'America/Manaus',
+    });
+
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: solicitacao.email,
+      subject: `Confirmação de solicitação de transporte #${solicitacao.id}`,
+      html: `
+        <h2>Olá, ${solicitacao.usuario_nome}!</h2>
+        <p>Sua solicitação de transporte foi registrada com os seguintes detalhes:</p>
+        <ul>
+          <li><strong>Número da solicitação:</strong> #${solicitacao.id}</li>
+          <li><strong>Setor:</strong> ${setorNome}</li>
+          <li><strong>Destino:</strong> ${solicitacao.destino}</li>
+          <li><strong>Data:</strong> ${dataFormatada}</li>
+          <li><strong>Horário:</strong> ${solicitacao.hora}</li>
+        </ul>
+        <p>Você será notificado assim que um motorista for designado.</p>
+      `,
+    });
+
+    console.log(`✅ E-mail de confirmação enviado para ${solicitacao.email} (solicitação #${solicitacao.id})`);
+  } catch (erroEmail) {
+    console.error(`❌ Falha ao enviar e-mail de confirmação (solicitação #${solicitacao.id}):`, erroEmail.message);
+  }
+}
 
 /// configuração login do AD ///
 const ADAuth = require('adauth').default;
@@ -690,9 +745,8 @@ app.post('/api/login-ad', async (req, res) => {
       ? user.memberOf
       : (user.memberOf ? [user.memberOf] : []);
 
-    //console para verificar qual grupo o usuário faz parte
-    // console.log('Grupos do usuário:', groups);
-    // console.log('AD_GILOG_GROUP_DN configurado:', AD_GILOG_GROUP_DN);
+    console.log('Grupos do usuário:', groups);
+    console.log('AD_GILOG_GROUP_DN configurado:', AD_GILOG_GROUP_DN);
 
     const isAdmin = groups.some((g) => g.toLowerCase() === AD_ADMIN_GROUP_DN.toLowerCase());
     const isGilog = AD_GILOG_GROUP_DN
@@ -711,7 +765,7 @@ app.post('/api/login-ad', async (req, res) => {
       isAdmin,
       isGilog,
       usuario: user.displayName || user.sAMAccountName,
-      redirectTo: isGilog ? '/manager' : '/solicitacao'
+      redirectTo: isGilog ? '/manager' : '/chamado'
     });
 
   } catch (error) {
@@ -793,17 +847,23 @@ app.get('/api/setores', async (req, res) => {
 
 // Criar uma nova solicitação
 app.post('/api/solicitacao', async (req, res) => {
-  const { usuario_nome, destino, setor_id, data, hora } = req.body;
+  const { usuario_nome, email, destino, setor_id, data, hora } = req.body; // <-- email adicionado
 
   try {
     const result = await pool.query(
-      `INSERT INTO solicitacoes (usuario_nome, destino, data, hora, setor_id, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO solicitacoes (usuario_nome, email, destino, data, hora, setor_id, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [usuario_nome, destino, data, hora, setor_id, 'aberto']
+      [usuario_nome, email, destino, data, hora, setor_id, 'aberto']
     );
 
     const solicitacao = result.rows[0];
+
+    // Envia o e-mail de confirmação com os dados DESSA solicitação.
+    // Não usamos "await" bloqueante aqui: a resposta ao usuário não espera
+    // o e-mail, mas o erro (se houver) fica logado.
+    enviarConfirmacaoEmail(solicitacao).catch(console.error);
+
     res.json(solicitacao);
 
   } catch (err) {
