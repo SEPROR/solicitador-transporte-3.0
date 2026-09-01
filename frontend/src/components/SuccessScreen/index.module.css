@@ -1,26 +1,63 @@
+/* Fundo escurecido que ocupa toda a tela */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.4); /* Overlay escuro sutil */
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Caixa branca do modal (combina com o card do formulário) */
 .container {
+  background-color: #ffffff;
+  padding: 2.5rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f1f5f9;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 4rem 2rem;
-  text-align: center;
+  gap: 1.25rem;
+  animation: modalAppear 0.25s ease-out forwards;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .iconWrapper {
   position: relative;
-}
-
-.iconCircle {
-  width: 5rem;
-  height: 5rem;
-  border-radius: 9999px;
-  background-color: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.iconCircle {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 9999px;
+  background-color: #ecfdf5; /* Verde sutil de sucesso */
+  border: 1px solid #a7f3d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
 }
 
 .icon {
@@ -31,14 +68,14 @@
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  background-color: rgba(16, 185, 129, 0.05);
-  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  background-color: rgba(16, 185, 129, 0.2);
+  animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 @keyframes ping {
   75%,
   100% {
-    transform: scale(2);
+    transform: scale(1.6);
     opacity: 0;
   }
 }
@@ -49,31 +86,41 @@
   gap: 0.5rem;
 }
 
+/* Título em tom escuro alinhado com o título da solicitação */
 .title {
   font-size: 1.25rem;
-  font-weight: 600;
-  color: #e8f0fe;
+  font-weight: 700;
+  color: #0f172a;
 }
 
+/* Subtítulo no mesmo tom de cinza do formulário */
 .subtitle {
   font-size: 0.875rem;
-  color: #6b8ab0;
+  color: #64748b;
+  line-height: 1.4;
   max-width: 20rem;
 }
 
+/* Botão azul usando a mesma cor do botão "Solicitar" (#2563eb) */
 .resetButton {
   margin-top: 0.5rem;
-  padding: 0.625rem 1.5rem;
-  border-radius: 6px;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 500;
-  background-color: #111c2d;
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  color: #3b82f6;
-  transition: background-color 150ms ease;
+  font-weight: 600;
+  background-color: #2563eb;
+  border: none;
+  color: #ffffff;
+  transition: background-color 150ms ease, transform 100ms ease;
   cursor: pointer;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .resetButton:hover {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: #1d4ed8;
+}
+
+.resetButton:active {
+  transform: scale(0.98);
 }

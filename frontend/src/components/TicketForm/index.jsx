@@ -1,6 +1,7 @@
-import { Send, User, Building2, MapPin, Clock, Calendar, Mail } from 'lucide-react';
+import { Send, User, Building2, MapPin, Clock, Calendar, Mail, CheckCircle2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import styles from './index.module.css';
+import SuccessScreen from '../../components/SuccessScreen'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 
@@ -75,12 +76,17 @@ export function TicketForm() {
       });
     } finally {
       setEnviando(false);
-      setTimeout(() => setStatus({ tipo: '', mensagem: '' }), 5000);
+      // setTimeout(() => setStatus({ tipo: '', mensagem: '' }), 5000);
     }
   };
 
   return (
     <div className={styles.wrapper}>
+    {/* Pop-up modal renderizado por cima quando houver sucesso */}
+    {status.tipo === 'sucesso' && (
+      <SuccessScreen onReset={() => setStatus({ tipo: '', mensagem: '' })} />
+    )}
+
       <div className={styles.card}>
         <div className={styles.headerBlock}>
           <h2 className={styles.title}>Solicitação de Transporte</h2>
@@ -88,7 +94,7 @@ export function TicketForm() {
             Preencha os dados abaixo para abrir uma nova solicitação de transporte
           </p>
         </div>
-
+      
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.field}>
             <label className={styles.label}>
@@ -106,7 +112,7 @@ export function TicketForm() {
             />
           </div>
 
-          <div className={styles.field}>
+           <div className={styles.field}>
             <label className={styles.label}>
               <Mail className={styles.labelIcon} />
               Email
@@ -120,7 +126,7 @@ export function TicketForm() {
               className={styles.input}
               required
             />
-          </div>
+          </div> 
 
           <div className={styles.field}>
             <label className={styles.label}>
@@ -192,20 +198,20 @@ export function TicketForm() {
           {/* Wrapper para empurrar o botão para o canto inferior direito */}
           <div className={styles.buttonWrapper}>
             <button type="submit" className={styles.submitButton} disabled={enviando}>
-              <Send className={styles.submitIcon} />
-              {enviando ? 'Enviando...' : 'Solicitar'}
-            </button>
+                    <CheckCircle2 size={15} />
+                    {enviando ? "Enviando..." : "Solicitar"}
+                  </button>
           </div>
 
-          {status.mensagem && (
+          {/* {status.mensagem && (
             <p className={status.tipo === 'sucesso' ? styles.sucesso : styles.erro}>
               {status.mensagem}
             </p>
-          )}
+          )} */}
         </form>
-      </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default TicketForm;
