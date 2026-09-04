@@ -75,7 +75,7 @@ export function Header() {
 
                   {/* Ações e Navegação */}
                   <div className={styles.dropdownActions}>
-                    <button
+                    {/* <button
                       onClick={() => setOpen(false)}
                       className={styles.actionButton}
                     >
@@ -83,7 +83,7 @@ export function Header() {
                         <ArrowLeftRight className={styles.actionIconBlue} />
                       </div>
                       <span>Trocar usuário</span>
-                    </button>
+                    </button> */}
 
                     <div className={styles.dropdownDivider} />
 
