@@ -765,7 +765,7 @@ app.post('/api/login-ad', async (req, res) => {
       isAdmin,
       isGilog,
       usuario: user.displayName || user.sAMAccountName,
-      redirectTo: isGilog ? '/manager' : '/chamado'
+      redirectTo: isGilog ? '/manager' : '/solicitacao'
     });
 
   } catch (error) {

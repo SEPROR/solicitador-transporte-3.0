@@ -30,10 +30,7 @@ export function Header() {
       {/* Faixa institucional superior */}
       <div className={styles.topBar}>
         <div className={styles.topBarContainer}>
-          <span className={styles.topBarTitle}>SEPROR</span>
-          <span className={styles.topBarSubtitle}>
-            Sistema Integrado de Gestão de Transporte
-          </span>
+          <span className={styles.topBarSubtitle}>Sistema Integrado de Gestão de Transporte</span>
         </div>
       </div>
 
@@ -43,9 +40,10 @@ export function Header() {
           <div className={styles.flexBetween}>
 
             <div className={styles.brandContainer}>
-              <img src="/images/governo.png" alt="Logo" className={styles.logo} />
+              <img src="/images/logo.png" alt="Logo" className={styles.logo} />
             </div>
 
+            <div className={styles.rightSection}>
             <div className={styles.userWrapper} ref={ref}>
               <button
                 onClick={() => setOpen((v) => !v)}
@@ -151,10 +149,15 @@ export function Header() {
               )}
             </div>
 
+            <div className={styles.secondaryBrandContainer}>
+              <img src="/images/seprorazul.png" alt="Outra Logo" className={styles.secondaryLogo} />
+            </div>
+          </div>
+
           </div>
         </div>
       </div>
-    </header>
+    </header >
   );
 }
 

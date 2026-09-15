@@ -19,14 +19,6 @@
   justify-content: space-between;
 }
 
-.topBarTitle {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: 500;
-  opacity: 0.8;
-}
-
 .topBarSubtitle {
   font-size: 0.75rem;
   opacity: 0.6;
@@ -307,4 +299,23 @@
   height: 1rem;
   color: #9ca3af;
   margin-right: 0.5rem;
+}
+
+/* Container que agrupa a área do usuário e a nova logo na direita */
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 8em; /* Espaçamento entre o menu de usuário e a nova logo */
+}
+
+/* Container e estilo da segunda logo */
+.secondaryBrandContainer {
+  display: flex;
+  align-items: center;
+}
+
+.secondaryLogo {
+  height: 3rem; /* Ajuste a altura conforme necessário */
+  width: auto;
+  object-fit: contain;
 }
