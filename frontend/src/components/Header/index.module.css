@@ -54,6 +54,7 @@
   display: flex;
   align-items: center;
   gap: 1.25rem;
+  margin-left: 8rem; /* Aumente ou diminua esse valor conforme necessário (ex: 2rem, 24px) */
 }
 
 .logo {
@@ -305,7 +306,7 @@
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 8em; /* Espaçamento entre o menu de usuário e a nova logo */
+  gap: 5em; /* Espaçamento entre o menu de usuário e a nova logo */
 }
 
 /* Container e estilo da segunda logo */
@@ -315,7 +316,7 @@
 }
 
 .secondaryLogo {
-  height: 3rem; /* Ajuste a altura conforme necessário */
+  height: 2.5rem; /* Ajuste a altura conforme necessário */
   width: auto;
   object-fit: contain;
 }

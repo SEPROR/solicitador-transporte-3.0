@@ -1,7 +1,7 @@
 .wrapper {
   width: 100%;
-  max-width: 48rem;
-  margin: 80px auto 2rem auto;
+  max-width: 60rem;
+  margin: 55px auto 2rem auto;
 }
 
 
@@ -10,7 +10,7 @@
   border-radius: 1rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   border: 1px solid #f3f4f6;
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .headerBlock {

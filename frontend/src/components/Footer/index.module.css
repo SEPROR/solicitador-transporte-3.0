@@ -1,55 +1,47 @@
 .footer {
-  background-color: #ffffff;
+  background-color: #1a3a6b;
   color: #f0f0f0; 
-  padding: 10px 0; 
   width: 100%; 
   text-align: center;
   margin-top: 100px;
+  /* Removido o padding: 10px 0 para eliminar o vão na parte inferior */
 }
 
 .footer-content {
   max-width: 1100px;
   margin: 0 auto;
+  padding: 20px 0; /* Controla o espaçamento interno do conteúdo principal */
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
 }
-
-.footer-bar {
-    display: flex;
-    width: 100%;
-    height: 3px;
-}
-
-.bar-blue {
-    flex: 1;
-    background-color: #003087;
-}
-
-.bar-green {
-    flex: 1;
-    background-color: #009B3A;
-}
-
-.bar-yellow {
-    flex: 1;
-    background-color: #FEDF00;
-}
-
 
 .footer-text {
   text-align: center;
   display: flex;
   gap: 30px;
-  color: #000000;
+  color: #ffffff; /* Alterado de #000000 para #ffffff para dar contraste com o azul */
   text-decoration: none;
-  font-size: 0.7rem;
-  margin-top: 20px;
+  font-size: 0.75rem;
+  margin: 0; /* Removido o margin-top de 20px */
+}
+
+.FooterBar {
+  background-color: #01122b;
+  color: #ffffff;
+  padding: 10px 15px; 
+  width: 100%;
+}
+
+.FooterBarContainer {
+  width: 100%;            
+  display: flex;
+  align-items: center;
+  justify-content: center; 
 }
 
 .copyright {
-  font-size: 0.7rem;
-  color: #000000;
-  margin: 0;
+ font-size: 0.70rem;
+  opacity: 0.6;
+  display: block; 
 }

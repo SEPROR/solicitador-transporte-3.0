@@ -18,7 +18,7 @@ export function SuccessScreen({ onReset }) {
           </p>
         </div>
         <button onClick={onReset} className={styles.resetButton}>
-          Nova solicitação
+          OK
         </button>
       </div>
     </div>
