@@ -18,11 +18,40 @@ export function TicketForm() {
   const [setores, setSetores] = useState([]);
   const [status, setStatus] = useState({ tipo: '', mensagem: '' });
   const [enviando, setEnviando] = useState(false);
+  const [carregandoUsuario, setCarregandoUsuario] = useState(true); // NOVO
+
+  // NOVO: busca o usuário logado no AD e trava o campo nome
+  useEffect(() => {
+    async function carregarUsuarioLogado() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/status`, {
+          credentials: 'include' // essencial: envia o cookie de sessão
+        });
+        const data = await response.json();
+
+        if (data.autenticado && data.usuario) {
+          setFormData((prev) => ({ ...prev, usuario_nome: data.usuario }));
+        } else {
+          // não está logado - redireciona pro login
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Erro ao buscar usuário logado:', error);
+        setStatus({ tipo: 'erro', mensagem: 'Não foi possível identificar o usuário logado.' });
+      } finally {
+        setCarregandoUsuario(false);
+      }
+    }
+
+    carregarUsuarioLogado();
+  }, []);
 
   useEffect(() => {
     async function carregarSetores() {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/setores`);
+        const response = await fetch(`${API_BASE_URL}/api/setores`, {
+          credentials: 'include' // NOVO
+        });
         if (!response.ok) throw new Error('Erro ao buscar setores');
         const data = await response.json();
         setSetores(data);
@@ -47,6 +76,7 @@ export function TicketForm() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/solicitacao`, {
         method: 'POST',
+        credentials: 'include', // NOVO
         headers: {
           'Content-Type': 'application/json'
         },
@@ -60,14 +90,15 @@ export function TicketForm() {
         mensagem: 'Solicitação aberta com sucesso! Aguarde designação do motorista.'
       });
 
-      setFormData({
-        usuario_nome: '',
+      // Mantém o nome (do AD) e limpa só os campos que o usuário preenche
+      setFormData((prev) => ({
+        usuario_nome: prev.usuario_nome,
         email: '',
         setor_id: '',
         destino: '',
         data: '',
         hora: ''
-      });
+      }));
     } catch (error) {
       console.error('Erro:', error);
       setStatus({
@@ -76,13 +107,11 @@ export function TicketForm() {
       });
     } finally {
       setEnviando(false);
-      // setTimeout(() => setStatus({ tipo: '', mensagem: '' }), 5000);
     }
   };
 
   return (
     <div className={styles.wrapper}>
-    {/* Pop-up modal renderizado por cima quando houver sucesso */}
     {status.tipo === 'sucesso' && (
       <SuccessScreen onReset={() => setStatus({ tipo: '', mensagem: '' })} />
     )}
@@ -105,8 +134,8 @@ export function TicketForm() {
               type="text"
               name="usuario_nome"
               value={formData.usuario_nome}
-              onChange={handleChange}
-              placeholder="Digite seu nome completo"
+              readOnly
+              placeholder={carregandoUsuario ? 'Carregando...' : 'Digite seu nome completo'}
               className={styles.input}
               required
             />
@@ -195,19 +224,12 @@ export function TicketForm() {
             />
           </div>
 
-          {/* Wrapper para empurrar o botão para o canto inferior direito */}
           <div className={styles.buttonWrapper}>
             <button type="submit" className={styles.submitButton} disabled={enviando}>
                     <CheckCircle2 size={15} />
                     {enviando ? "Enviando..." : "Solicitar"}
                   </button>
           </div>
-
-          {/* {status.mensagem && (
-            <p className={status.tipo === 'sucesso' ? styles.sucesso : styles.erro}>
-              {status.mensagem}
-            </p>
-          )} */}
         </form>
     </div>
   </div>
