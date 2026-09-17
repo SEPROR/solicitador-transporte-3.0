@@ -1,11 +1,11 @@
 .container {
-  max-width: 720px;
-  margin: 60px auto 2rem auto;
+  max-width: 60rem;
+  margin: 20px auto 2rem auto;
   padding: 32px 24px;
 }
 
 .pageTitle {
-  font-size: 28px;
+  font-size: 1.70rem;
   font-weight: 700;
   color: #111827;
   margin-bottom: 24px;

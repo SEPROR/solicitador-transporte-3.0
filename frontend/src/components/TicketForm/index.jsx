@@ -141,21 +141,6 @@ export function TicketForm() {
             />
           </div>
 
-           <div className={styles.field}>
-            <label className={styles.label}>
-              <Mail className={styles.labelIcon} />
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="ana.silva@gmail.com"
-              className={styles.input}
-              required
-            />
-          </div> 
 
           <div className={styles.field}>
             <label className={styles.label}>
@@ -177,6 +162,22 @@ export function TicketForm() {
               ))}
             </select>
           </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>
+              <Mail className={styles.labelIcon} />
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="ana.silva@gmail.com"
+              className={styles.input}
+              required
+            />
+          </div> 
 
           <div className={styles.field}>
             <label className={styles.label}>

@@ -27,6 +27,7 @@ export function Header() {
 
   return (
     <header className={styles.header}>
+
       {/* Faixa institucional superior */}
       <div className={styles.topBar}>
         <div className={styles.topBarContainer}>

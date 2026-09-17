@@ -68,13 +68,6 @@
   background: linear-gradient(to bottom, transparent, #d1d5db, transparent);
 }
 
-
-.title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-}
-
 .badgeText {
   font-size: 0.875rem;
   color: #6b7280;
@@ -319,4 +312,11 @@
   height: 2.5rem; /* Ajuste a altura conforme necessário */
   width: auto;
   object-fit: contain;
+}
+
+.topBarSubtitle {
+  user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE/Edge */
 }

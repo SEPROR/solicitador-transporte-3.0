@@ -1,47 +1,109 @@
 .footer {
-  background-color: #1a3a6b;
-  color: #f0f0f0; 
-  width: 100%; 
-  text-align: center;
+  width: 100%;
   margin-top: 100px;
-  /* Removido o padding: 10px 0 para eliminar o vão na parte inferior */
+  color: #f0f0f0;
 }
 
-.footer-content {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 20px 0; /* Controla o espaçamento interno do conteúdo principal */
+.footer-top {
+  background-color: #1a3a6b;
+  width: 100%;
+  padding: 24px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  gap: 350px; 
+  flex-wrap: wrap;
+}
+
+.footer-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 10px;
 }
 
-.footer-text {
-  text-align: center;
+.footer-title {
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.footer-columns {
   display: flex;
-  gap: 30px;
-  color: #ffffff; /* Alterado de #000000 para #ffffff para dar contraste com o azul */
-  text-decoration: none;
-  font-size: 0.75rem;
-  margin: 0; /* Removido o margin-top de 20px */
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  color: #e5e5e5;
+  gap: 2px;
+}
+
+.column-label {
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.brand-name {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.brand-subtitle {
+  color: #dcdcdc;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 .FooterBar {
   background-color: #01122b;
   color: #ffffff;
-  padding: 10px 15px; 
+  padding: 10px 15px;
   width: 100%;
 }
 
 .FooterBarContainer {
-  width: 100%;            
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center; 
+  justify-content: center;
 }
 
 .copyright {
- font-size: 0.70rem;
+  font-size: 0.60rem;
   opacity: 0.6;
-  display: block; 
+  display: block;
+}
+
+.footer-top,
+.FooterBar {
+  user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE/Edge */
 }
