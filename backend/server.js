@@ -199,7 +199,7 @@ async function getADClient() {
     domainDN: process.env.AD_DOMAIN_DN,
     searchBase: process.env.AD_SEARCH_BASE,
 
-    searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName'],
+    searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName', 'distinguishedName'],
     connectTimeout: 5000, // 5 segundos
     timeout: 5000,
     reconnect: true,
@@ -240,6 +240,55 @@ function normalizeUsername(input) {
   }
 
   return user;
+}
+
+// ==============================================
+// SETOR AUTOMÁTICO A PARTIR DA OU DO AD (NOVO)
+// ==============================================
+// O DN do usuário no AD tem o formato:
+//   CN=Nome da Pessoa,OU=SETOR,OU=USUARIOS,OU=SEPROR,DC=sepror,DC=am,DC=gov,DC=br
+// A primeira OU logo após o CN é o setor da pessoa.
+
+// Extrai o nome do setor a partir do DN do usuário
+function extrairSetorDoDN(dn) {
+  if (!dn) return null;
+
+  const partes = dn.split(',').map((p) => p.trim());
+  const primeiraOU = partes.find((p) => p.toUpperCase().startsWith('OU='));
+
+  if (!primeiraOU) return null;
+
+  return primeiraOU.substring(3).trim();
+}
+
+// Busca o setor no banco pelo nome (case-insensitive).
+// Se não existir ainda, cria automaticamente — assim novos setores
+// que apareçam no AD não exigem nenhum cadastro manual.
+async function buscarOuCriarSetor(nomeSetorAD) {
+  if (!nomeSetorAD) return null;
+
+  try {
+    const existente = await pool.query(
+      'SELECT id, nome FROM setores WHERE UPPER(nome) = UPPER($1)',
+      [nomeSetorAD]
+    );
+
+    if (existente.rows.length > 0) {
+      return existente.rows[0];
+    }
+
+    const novo = await pool.query(
+      'INSERT INTO setores (nome) VALUES ($1) RETURNING id, nome',
+      [nomeSetorAD]
+    );
+
+    console.log(`🆕 Setor "${nomeSetorAD}" criado automaticamente a partir do AD`);
+    return novo.rows[0];
+
+  } catch (err) {
+    console.error('❌ Erro ao buscar/criar setor a partir do AD:', err.message);
+    return null;
+  }
 }
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -744,20 +793,31 @@ app.post('/api/login-ad', async (req, res) => {
     const groups = Array.isArray(user.memberOf)
       ? user.memberOf
       : (user.memberOf ? [user.memberOf] : []);
+    const groupsLower = groups.map((g) => g.toLowerCase());
 
     console.log('Grupos do usuário:', groups);
     console.log('AD_GILOG_GROUP_DN configurado:', AD_GILOG_GROUP_DN);
 
-    const isAdmin = groups.some((g) => g.toLowerCase() === AD_ADMIN_GROUP_DN.toLowerCase());
+    const isAdmin = groupsLower.includes(AD_ADMIN_GROUP_DN.toLowerCase());
     const isGilog = AD_GILOG_GROUP_DN
-      ? groups.some((g) => g.toLowerCase() === AD_GILOG_GROUP_DN.toLowerCase())
+      ? groupsLower.includes(AD_GILOG_GROUP_DN.toLowerCase())
       : false;
+
+    // NOVO: setor 100% automático, extraído da OU do usuário no AD
+    const dnUsuario = user.dn || user.distinguishedName;
+    const nomeSetorAD = extrairSetorDoDN(dnUsuario);
+    const setorInfo = await buscarOuCriarSetor(nomeSetorAD);
+
+    console.log('Setor detectado automaticamente do AD:', nomeSetorAD, '-> setor_id:', setorInfo?.id);
 
     req.session.autenticado = true;
     req.session.usuario = user.displayName || user.sAMAccountName;
+    req.session.usuarioLogin = user.sAMAccountName;
     req.session.isAdmin = isAdmin;
     req.session.isGilog = isGilog;
     req.session.nivelAcesso = isGilog ? 'GILOG' : 'USER';
+    req.session.setorId = setorInfo ? setorInfo.id : null;
+    req.session.setorNome = setorInfo ? setorInfo.nome : null;
 
     return res.json({
       success: true,
@@ -765,6 +825,8 @@ app.post('/api/login-ad', async (req, res) => {
       isAdmin,
       isGilog,
       usuario: user.displayName || user.sAMAccountName,
+      setorId: req.session.setorId,
+      setorNome: req.session.setorNome,
       redirectTo: isGilog ? '/manager' : '/solicitacao'
     });
 
@@ -802,7 +864,9 @@ app.get('/api/auth/status', (req, res) => {
     usuarioId: req.session.usuarioId || null,
     isAdmin: req.session.isAdmin || false,
     isGilog: req.session.isGilog || false,
-    nivelAcesso: req.session.nivelAcesso || null
+    nivelAcesso: req.session.nivelAcesso || null,
+    setorId: req.session.setorId || null,     // NOVO
+    setorNome: req.session.setorNome || null  // NOVO
   });
 });
 
@@ -846,8 +910,21 @@ app.get('/api/setores', async (req, res) => {
 });
 
 // Criar uma nova solicitação
+// NOVO: setor_id não é mais confiado do corpo da requisição — vem sempre
+// da sessão (detectado automaticamente no login pela OU do AD).
 app.post('/api/solicitacao', async (req, res) => {
-  const { usuario_nome, email, destino, setor_id, data, hora } = req.body; // <-- email adicionado
+  if (!req.session.autenticado) {
+    return res.status(401).json({ error: 'Não autorizado' });
+  }
+
+  const { usuario_nome, email, destino, data, hora } = req.body;
+  const setor_id = req.session.setorId;
+
+  if (!setor_id) {
+    return res.status(400).json({
+      error: 'Não foi possível identificar seu setor no Active Directory. Contate o administrador.'
+    });
+  }
 
   try {
     const result = await pool.query(
