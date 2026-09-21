@@ -9,18 +9,18 @@ export function TicketForm() {
   const [formData, setFormData] = useState({
     usuario_nome: '',
     email: '',
-    setor_id: '',
     destino: '',
     data: '',
     hora: ''
   });
 
-  const [setores, setSetores] = useState([]);
+  const [setorNome, setSetorNome] = useState(''); // NOVO — vem da sessão, não é mais escolhido
   const [status, setStatus] = useState({ tipo: '', mensagem: '' });
   const [enviando, setEnviando] = useState(false);
-  const [carregandoUsuario, setCarregandoUsuario] = useState(true); // NOVO
+  const [carregandoUsuario, setCarregandoUsuario] = useState(true);
 
-  // NOVO: busca o usuário logado no AD e trava o campo nome
+  // Busca o usuário logado no AD, junto com o setor já detectado no login,
+  // e trava os dois campos (nome e setor) para o usuário.
   useEffect(() => {
     async function carregarUsuarioLogado() {
       try {
@@ -31,6 +31,7 @@ export function TicketForm() {
 
         if (data.autenticado && data.usuario) {
           setFormData((prev) => ({ ...prev, usuario_nome: data.usuario }));
+          setSetorNome(data.setorNome || 'Setor não identificado (verifique com o administrador)'); // NOVO
         } else {
           // não está logado - redireciona pro login
           window.location.href = '/login';
@@ -46,23 +47,8 @@ export function TicketForm() {
     carregarUsuarioLogado();
   }, []);
 
-  useEffect(() => {
-    async function carregarSetores() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/setores`, {
-          credentials: 'include' // NOVO
-        });
-        if (!response.ok) throw new Error('Erro ao buscar setores');
-        const data = await response.json();
-        setSetores(data);
-      } catch (error) {
-        console.error('Erro ao carregar setores:', error);
-        setStatus({ tipo: 'erro', mensagem: 'Não foi possível carregar os setores.' });
-      }
-    }
-
-    carregarSetores();
-  }, []);
+  // removido: useEffect que buscava a lista de setores em /api/setores
+  // (o setor agora vem pronto de /api/auth/status, detectado no login)
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -76,11 +62,11 @@ export function TicketForm() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/solicitacao`, {
         method: 'POST',
-        credentials: 'include', // NOVO
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData) // não inclui mais setor_id — o backend usa o da sessão
       });
 
       if (!response.ok) throw new Error('Erro ao criar solicitação');
@@ -90,11 +76,10 @@ export function TicketForm() {
         mensagem: 'Solicitação aberta com sucesso! Aguarde designação do motorista.'
       });
 
-      // Mantém o nome (do AD) e limpa só os campos que o usuário preenche
+      // Mantém nome e limpa só os campos que o usuário preenche
       setFormData((prev) => ({
         usuario_nome: prev.usuario_nome,
         email: '',
-        setor_id: '',
         destino: '',
         data: '',
         hora: ''
@@ -147,20 +132,13 @@ export function TicketForm() {
               <Building2 className={styles.labelIcon} />
               Setor
             </label>
-            <select
-              name="setor_id"
-              value={formData.setor_id}
-              onChange={handleChange}
-              className={styles.select}
-              required
-            >
-              <option value="">Selecione o setor</option>
-              {setores.map((setor) => (
-                <option key={setor.id} value={setor.id}>
-                  {setor.nome}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              name="setor_nome"
+              value={carregandoUsuario ? 'Carregando...' : setorNome}
+              readOnly
+              className={styles.input}
+            />
           </div>
 
           <div className={styles.field}>
