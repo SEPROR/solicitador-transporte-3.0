@@ -49,7 +49,8 @@ export function SolicitacaoManager({ solicitacao, authData, onAtualizar }) {
 
       <p><strong>Solicitante:</strong> {solicitacao.usuario_nome}</p>
       <p><strong>Setor:</strong> {solicitacao.setor_nome}</p>
-      <p><strong>Destino:</strong> {solicitacao.destino}</p>
+      <p><strong>Embarque:</strong> {solicitacao.embarque}</p>
+      <p><strong>Desembarque:</strong> {solicitacao.desembarque}</p>
       <p>
         <strong>Data da partida:</strong>{' '}
         {new Date(solicitacao.data).toLocaleDateString('pt-BR', {

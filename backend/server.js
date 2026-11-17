@@ -6,7 +6,9 @@ const axios = require('axios');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const nodemailer = require('nodemailer'); // <-- ADICIONADO
+const nodemailer = require('nodemailer'); 
+const rateLimit = require('express-rate-limit');
+
 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -172,7 +174,8 @@ async function enviarConfirmacaoEmail(solicitacao) {
         <ul>
           <li><strong>Número da solicitação:</strong> #${solicitacao.id}</li>
           <li><strong>Setor:</strong> ${setorNome}</li>
-          <li><strong>Destino:</strong> ${solicitacao.destino}</li>
+          <li><strong>Embarque:</strong> ${solicitacao.embarque}</li>
+          <li><strong>Desembarque:</strong> ${solicitacao.desembarque}</li>
           <li><strong>Data:</strong> ${dataFormatada}</li>
           <li><strong>Horário:</strong> ${solicitacao.hora}</li>
         </ul>
@@ -328,6 +331,8 @@ async function enviarParaTelegram(motoristaId, solicitacao) {
 
 👤 *Solicitante:* ${solicitacao.usuario_nome}
 🏢 *Local:* ${setorNome}
+📍 *Embarque:* ${solicitacao.embarque}
+🏁 *Desembarque:* ${solicitacao.desembarque}
 👨‍✈️ *Motorista Designado:* ${result.rows[0].nome}
 🔢 *Número da Solicitação:* #${solicitacao.id}
 ⏰ *Data/Hora da partida:* ${new Date(solicitacao.data).toLocaleDateString('pt-BR', { timeZone: 'America/Manaus' })} *ás* ${solicitacao.hora}
@@ -917,7 +922,7 @@ app.post('/api/solicitacao', async (req, res) => {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
-  const { usuario_nome, email, destino, data, hora } = req.body;
+  const { usuario_nome, email, embarque, desembarque, data, hora } = req.body;
   const setor_id = req.session.setorId;
 
   if (!setor_id) {
@@ -928,10 +933,10 @@ app.post('/api/solicitacao', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `INSERT INTO solicitacoes (usuario_nome, email, destino, data, hora, setor_id, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO solicitacoes (usuario_nome, email, embarque, desembarque , data, hora, setor_id, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [usuario_nome, email, destino, data, hora, setor_id, 'aberto']
+      [usuario_nome, email, embarque, desembarque, data, hora, setor_id, 'aberto']
     );
 
     const solicitacao = result.rows[0];
@@ -1158,6 +1163,122 @@ app.put('/api/solicitacao/:id', async (req, res) => {
     });
   }
 });
+
+
+// ==============================================
+// AUTOCOMPLETE DE ENDEREÇOS (somente Manaus)
+// ==============================================
+
+const MANAUS_RECT = 'rect:-60.20,-3.20,-59.80,-2.90';
+
+function ehDeManaus(props) {
+  const cidade = (props.city || props.town || props.county || '')
+    .toString()
+    .toLowerCase();
+  return !cidade || cidade.includes('manaus');
+}
+
+// Cache em memória (compartilhado entre todos os usuários)
+const cacheEnderecos = new Map();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const CACHE_MAX_ITENS = 2000;
+
+function guardarNoCache(chave, dados) {
+  if (cacheEnderecos.size >= CACHE_MAX_ITENS) {
+    cacheEnderecos.delete(cacheEnderecos.keys().next().value);
+  }
+  cacheEnderecos.set(chave, { dados, quando: Date.now() });
+}
+
+// Busca por CEP no ViaCEP.
+// Retorna null  -> o texto não é um CEP (segue para o Geoapify)
+// Retorna []    -> é um CEP, mas não foi encontrado / não é de Manaus
+// Retorna [...] -> endereço encontrado
+async function buscarPorCep(texto) {
+  const cep = texto.replace(/\D/g, '');
+
+  // Só trata como CEP se o texto for basicamente numérico (ex.: 69050-010, 69050010)
+  const pareceCep = /^\d{5}-?\d{3}$/.test(texto.trim());
+  if (!pareceCep || cep.length !== 8) return null;
+
+  try {
+    const { data } = await axios.get(`https://viacep.com.br/ws/${cep}/json/`, {
+      timeout: 4000
+    });
+
+    if (data.erro) return [];
+    if (data.localidade?.toLowerCase() !== 'manaus') return []; // app só atende Manaus
+
+    const partes = [data.logradouro, data.bairro, `${data.localidade} - ${data.uf}`, data.cep]
+      .filter(Boolean); // ignora campos vazios (CEPs genéricos não têm rua)
+
+    return [{ id: `cep-${cep}`, endereco: partes.join(', ') }];
+  } catch (err) {
+    console.error('Erro no ViaCEP:', err.message);
+    return null; // se o ViaCEP falhar, tenta o Geoapify mesmo assim
+  }
+}
+
+// Limite por IP para proteger a cota gratuita
+const limitadorEnderecos = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => res.json([])
+});
+
+app.get('/api/enderecos/autocomplete', limitadorEnderecos, async (req, res) => {
+  if (!req.session.autenticado) {
+    return res.status(401).json({ error: 'Não autorizado' });
+  }
+
+  const texto = (req.query.q || '').trim();
+  if (texto.length < 3) return res.json([]);
+
+  const chave = texto.toLowerCase();
+  const emCache = cacheEnderecos.get(chave);
+  if (emCache && Date.now() - emCache.quando < CACHE_TTL_MS) {
+    return res.json(emCache.dados);
+  }
+
+  // 1) Se for CEP completo, resolve pelo ViaCEP
+  const porCep = await buscarPorCep(texto);
+  if (porCep !== null) {
+    guardarNoCache(chave, porCep);
+    return res.json(porCep);
+  }
+
+  // 2) Caso contrário, Geoapify
+  try {
+    const response = await axios.get('https://api.geoapify.com/v1/geocode/autocomplete', {
+      params: {
+        text: texto,
+        lang: 'pt',
+        limit: 10,
+        filter: MANAUS_RECT,
+        bias: 'proximity:-60.0217,-3.1190',
+        apiKey: process.env.GEOAPIFY_KEY
+      },
+      timeout: 5000
+    });
+
+    const sugestoes = response.data.features
+      .filter((f) => ehDeManaus(f.properties))
+      .slice(0, 5)
+      .map((f) => ({
+        id: f.properties.place_id,
+        endereco: f.properties.formatted
+      }));
+
+    guardarNoCache(chave, sugestoes);
+    res.json(sugestoes);
+  } catch (err) {
+    console.error('Erro no autocomplete:', err.message);
+    res.json([]);
+  }
+});
+
 
 // ==============================================
 // Gerenciamento de Técnicos (restrito a GILOG/Admin)

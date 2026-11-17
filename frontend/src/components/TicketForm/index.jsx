@@ -1,7 +1,8 @@
 import { Send, User, Building2, MapPin, Clock, Calendar, Mail, CheckCircle2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import styles from './index.module.css';
-import SuccessScreen from '../../components/SuccessScreen'
+import SuccessScreen from '../../components/SuccessScreen';
+import AddressInput from '../AddressInput.jsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 
@@ -9,7 +10,8 @@ export function TicketForm() {
   const [formData, setFormData] = useState({
     usuario_nome: '',
     email: '',
-    destino: '',
+    embarque: '',
+    desembarque: '',
     data: '',
     hora: ''
   });
@@ -80,7 +82,8 @@ export function TicketForm() {
       setFormData((prev) => ({
         usuario_nome: prev.usuario_nome,
         email: '',
-        destino: '',
+        embarque: '',
+        desembarque: '',
         data: '',
         hora: ''
       }));
@@ -97,9 +100,9 @@ export function TicketForm() {
 
   return (
     <div className={styles.wrapper}>
-    {status.tipo === 'sucesso' && (
-      <SuccessScreen onReset={() => setStatus({ tipo: '', mensagem: '' })} />
-    )}
+      {status.tipo === 'sucesso' && (
+        <SuccessScreen onReset={() => setStatus({ tipo: '', mensagem: '' })} />
+      )}
 
       <div className={styles.card}>
         <div className={styles.headerBlock}>
@@ -108,7 +111,7 @@ export function TicketForm() {
             Preencha os dados abaixo para abrir uma nova solicitação de transporte
           </p>
         </div>
-      
+
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.field}>
             <label className={styles.label}>
@@ -155,21 +158,33 @@ export function TicketForm() {
               className={styles.input}
               required
             />
-          </div> 
+          </div>
 
           <div className={styles.field}>
             <label className={styles.label}>
               <MapPin className={styles.labelIcon} />
-              Destino
+              Embarque
             </label>
-            <input
-              type="text"
-              name="destino"
-              value={formData.destino}
+            <AddressInput
+              name="embarque"
+              value={formData.embarque}
               onChange={handleChange}
-              placeholder="Informe o endereço completo: rua, número e bairro"
+              placeholder="Local de partida: rua, número e bairro"
               className={styles.input}
-              required
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>
+              <MapPin className={styles.labelIcon} />
+              Desembarque
+            </label>
+            <AddressInput
+              name="desembarque"
+              value={formData.desembarque}
+              onChange={handleChange}
+              placeholder="Para onde? Informe rua, número e bairro"
+              className={styles.input}
             />
           </div>
 
@@ -205,14 +220,14 @@ export function TicketForm() {
 
           <div className={styles.buttonWrapper}>
             <button type="submit" className={styles.submitButton} disabled={enviando}>
-                    <CheckCircle2 size={15} />
-                    {enviando ? "Enviando..." : "Solicitar"}
-                  </button>
+              <CheckCircle2 size={15} />
+              {enviando ? "Enviando..." : "Solicitar"}
+            </button>
           </div>
         </form>
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default TicketForm;

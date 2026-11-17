@@ -22,14 +22,14 @@ export default function SolicitacoesTable({ dados, onRowClick, onPrint }) {
         <table className={styles.table}>
           <thead>
             <tr>
-              {["#","Solicitante","Setor","Destino","Motorista","Data de Saída","Encerrada em","Status","KM"]
+              {["#","Solicitante","Setor","Embarque","Desembarque", "Motorista","Data de Saída","Encerrada em","Status","KM"]
                 .map(h => <th key={h}>{h}</th>)}
             </tr>
           </thead>
           <tbody>
             {dados.length === 0 ? (
               <tr>
-                <td colSpan={9} className={styles.empty}>
+                <td colSpan={10} className={styles.empty}>
                   Nenhuma solicitação encontrada para os filtros selecionados.
                 </td>
               </tr>
@@ -38,7 +38,8 @@ export default function SolicitacoesTable({ dados, onRowClick, onPrint }) {
                 <td className={styles.tdId}>#{s.id}</td>
                 <td className={styles.tdBold}>{s.solicitante}</td>
                 <td className={styles.tdMuted}>{s.setor}</td>
-                <td className={`${styles.tdMuted} ${styles.tdTrunc}`} title={s.destino}>{s.destino}</td>
+                <td className={`${styles.tdMuted} ${styles.tdTrunc}`} title={s.embarque}>{s.embarque}</td>
+                <td className={`${styles.tdMuted} ${styles.tdTrunc}`} title={s.desembarque}>{s.desembarque}</td>
                 <td>
                   <div className={styles.avatarCell}>
                     <div className={styles.avatar}>{initials(s.motorista)}</div>
@@ -69,7 +70,8 @@ export default function SolicitacoesTable({ dados, onRowClick, onPrint }) {
               <StatusBadge status={s.status} />
             </div>
             <div className={styles.mobileMeta}>
-              <strong>Destino:</strong> {s.destino}<br />
+              <strong>Embarque:</strong> {s.embarque}<br />
+              <strong>Desembarque:</strong> {s.desembarque}<br />
               <strong>Motorista:</strong> {s.motorista}<br />
               <strong>Saída:</strong> {s.dataPartida} às {s.horaPartida}
             </div>

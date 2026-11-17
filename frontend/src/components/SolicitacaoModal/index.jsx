@@ -17,7 +17,8 @@ export function SolicitacaoModal({ solicitacao, onFechar, onExportarPDF }) {
   const campos = [
     ['Solicitante', solicitacao.solicitante],
     ['Setor', solicitacao.setor],
-    ['Destino', solicitacao.destino],
+    ['Embarque', solicitacao.embarque],
+    ['Desembarque', solicitacao.desembarque],
     ['Motorista', solicitacao.motorista],
     ['Data de Saída', solicitacao.dataPartida],
     ['Hora de Saída', solicitacao.horaPartida],

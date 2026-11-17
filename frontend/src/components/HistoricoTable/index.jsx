@@ -44,7 +44,8 @@ export function HistoricoTable({ estado, itens, tableCountLabel, onAbrirModal, o
               <th>#</th>
               <th>Solicitante</th>
               <th>Setor</th>
-              <th>Destino</th>
+              <th>Embarque</th>
+              <th>Desembarque</th>
               <th>Motorista</th>
               <th>Data de Saída</th>
               <th>Encerrada em</th>
@@ -61,7 +62,8 @@ export function HistoricoTable({ estado, itens, tableCountLabel, onAbrirModal, o
                 <td className={styles.tdId}>#{s.id}</td>
                 <td style={{ fontWeight: 500 }}>{s.solicitante}</td>
                 <td className={styles.tdMuted}>{s.setor}</td>
-                <td className={`${styles.tdMuted} ${styles.tdTrunc}`} title={s.destino}>{s.destino}</td>
+                <td className={`${styles.tdMuted} ${styles.tdTrunc}`} title={s.embarque}>{s.embarque}</td>
+                <td className={`${styles.tdMuted} ${styles.tdTrunc}`} title={s.desembarque}>{s.desembarque}</td>
                 <td>
                   <div className={styles.avatarCell}>
                     <div className={styles.avatar}>{initials(s.motorista)}</div>
@@ -90,7 +92,8 @@ export function HistoricoTable({ estado, itens, tableCountLabel, onAbrirModal, o
               <Badge status={s.status} />
             </div>
             <div className={styles.mobileCardMeta}>
-              <strong>Destino:</strong> {s.destino}<br />
+              <strong>Embarque:</strong> {s.embarque}<br />
+              <strong>Desembarque:</strong> {s.desembarque}<br />
               <strong>Motorista:</strong> {s.motorista}<br />
               <strong>Saída:</strong> {s.dataPartida} às {s.horaPartida}
             </div>
