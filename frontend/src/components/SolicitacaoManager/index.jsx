@@ -23,16 +23,18 @@ export function SolicitacaoManager({ solicitacao, authData, onAtualizar }) {
     ? new Date(solicitacao.data_fechamento).toLocaleString('pt-BR')
     : 'Não finalizada';
 
-  const isAdmin = authData.isAdmin || false;
-  const nivelAcesso = authData.nivelAcesso;
-  const usuarioId = authData.usuarioId;
+ 
+const isAdmin = authData.isAdmin || false;
+const isGilog = authData.isGilog || false;
+const isSubAdmin = authData.isSubAdmin || false;
+const motoristaId = authData.motoristaId ?? null;
 
-  const podeDesignar = isAdmin || nivelAcesso === 'N3';
-  const podeFechar =
-    isAdmin ||
-    nivelAcesso === 'N3' ||
-    (['N1', 'N2'].includes(nivelAcesso) && solicitacao.motorista_id === usuarioId);
-  const podeRedirecionar = isAdmin || nivelAcesso === 'N3';
+const ehMotoristaDaSolicitacao =
+  motoristaId !== null && solicitacao.motorista_id === motoristaId;
+
+const podeDesignar = isAdmin || isGilog;
+const podeFechar = isAdmin || isSubAdmin || ehMotoristaDaSolicitacao;
+const podeRedirecionar = isAdmin || isGilog;
 
   const handleConcluir = () => {
     setFormAtivo(null);
