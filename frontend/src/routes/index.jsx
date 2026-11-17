@@ -3,7 +3,6 @@ import { AuthProvider } from '../context/AuthContext';
 import { PrivateRoute } from './PrivateRoute';
 
 import Home from '../pages/Home/Home';
-import Setores from '../pages/Setores/Setores';
 import Manager from '../pages/Manager/Manager';
 import Relatorio from '../pages/Relatorio/Relatorio';
 import Motoristas from '../pages/Motorista/Motorista';
@@ -27,14 +26,6 @@ const AppRoutes = () => {
           />
 
           {/* Exclusivas do GILOG */}
-          <Route
-            path="/setores"
-            element={
-              <PrivateRoute requireGilog>
-                <Setores />
-              </PrivateRoute>
-            }
-          />
           <Route
             path="/manager"
             element={

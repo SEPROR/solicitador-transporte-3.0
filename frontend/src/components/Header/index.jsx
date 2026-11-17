@@ -117,14 +117,6 @@ export function Header() {
                         </Link>
 
                         <Link
-                          to="/setores"
-                          onClick={() => setOpen(false)}
-                          className={styles.dropdownItem}
-                        >
-                          Gerenciar Setores
-                        </Link>
-
-                        <Link
                           to="/relatorio"
                           onClick={() => setOpen(false)}
                           className={styles.dropdownItem}
