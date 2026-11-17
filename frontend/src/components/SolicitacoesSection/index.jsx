@@ -7,9 +7,12 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 export function SolicitacoesSection({ titulo, solicitacoes, authData, onAtualizar, visivel }) {
   const [excluindoId, setExcluindoId] = useState(null);
 
+  // Mesma regra do backend (apenasGilog): admin OU GILOG
+  const podeExcluir = !!(authData?.isGilog || authData?.isAdmin);
+
   if (!visivel) return null;
 
-    async function excluirSolicitacao(id) {
+  async function excluirSolicitacao(id) {
     if (!confirm('Tem certeza que deseja excluir esta solicitação finalizada?')) return;
 
     setExcluindoId(id);
@@ -20,13 +23,13 @@ export function SolicitacoesSection({ titulo, solicitacoes, authData, onAtualiza
         credentials: 'include'
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        onAtualizar();
-      } else {
-        alert(data.error || 'Erro ao excluir solicitação');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        alert(err.error || 'Erro ao excluir solicitação');
+        return;
       }
+
+      onAtualizar();
     } catch (error) {
       console.error('Erro ao excluir solicitação:', error);
       alert('Erro ao excluir solicitação');
@@ -34,7 +37,6 @@ export function SolicitacoesSection({ titulo, solicitacoes, authData, onAtualiza
       setExcluindoId(null);
     }
   }
-
 
   return (
     <div className={styles.section}>
@@ -52,7 +54,7 @@ export function SolicitacoesSection({ titulo, solicitacoes, authData, onAtualiza
                 onAtualizar={onAtualizar}
               />
 
-              {solicitacao.status === 'fechado' && (
+              {podeExcluir && solicitacao.status === 'fechado' && (
                 <button
                   className={styles.botaoExcluir}
                   onClick={() => excluirSolicitacao(solicitacao.id)}
