@@ -159,7 +159,11 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+  statement_timeout: 10000,
 });
+pool.on('error', (err) => console.error('Erro no pool:', err.message));
 
 // ==============================================
 // FUNÇÃO ÚNICA PARA FECHAR SOLICITAÇÃO (NOVO)
@@ -237,27 +241,77 @@ async function enviarConfirmacaoEmail(solicitacao) {
 const ADAuth = require('adauth').default;
 
 let adInstance = null;
+let adPromise = null;
 
-async function getADClient() {
-  if (adInstance) return adInstance;
+// Descarta a conexão atual para a próxima tentativa criar uma nova
+function resetAD() {
+  const old = adInstance;
+  adInstance = null;
+  adPromise = null;
+  try {
+    // confira no README da adauth qual é o nome do método (close/destroy/unbind)
+    const fechar = old?.close || old?.destroy || old?.unbind;
+    Promise.resolve(fechar?.call(old)).catch(() => {});
+  } catch (_) {}
+}
 
-  adInstance = await ADAuth.create({
-    url: process.env.AD_URL,
-    domainDN: process.env.AD_DOMAIN_DN,
-    searchBase: process.env.AD_SEARCH_BASE,
+function getADClient() {
+  if (!adPromise) {
+    adPromise = ADAuth.create({
+      url: process.env.AD_URL,
+      domainDN: process.env.AD_DOMAIN_DN,
+      searchBase: process.env.AD_SEARCH_BASE,
+      searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName', 'distinguishedName'],
+      connectTimeout: 5000,
+      timeout: 5000,
+      reconnect: true,
+      referrals: { enabled: false }
+    })
+      .then((ad) => {
+        adInstance = ad;
+        ad.on('error', (err) => {
+          console.error('Erro de conexão com o AD:', err.message);
+          if (adInstance === ad) resetAD(); // descarta conexão quebrada
+        });
+        return ad;
+      })
+      .catch((err) => {
+        adPromise = null; // permite tentar de novo
+        throw err;
+      });
+  }
+  return adPromise; // logins simultâneos compartilham a mesma criação
+}
 
-    searchAttributes: ['displayName', 'mail', 'memberOf', 'sAMAccountName', 'distinguishedName'],
-    connectTimeout: 5000,
-    timeout: 5000,
-    reconnect: true,
-    referrals: { enabled: false }
+// Timeout que NUNCA deixa a requisição pendurada
+function comTimeout(promise, ms, msg) {
+  let t;
+  const limite = new Promise((_, rej) => {
+    t = setTimeout(() => rej(Object.assign(new Error(msg), { code: 'AD_TIMEOUT' })), ms);
   });
+  return Promise.race([promise, limite]).finally(() => clearTimeout(t));
+}
 
-  adInstance.on('error', (err) => {
-    console.error('Erro de conexão com o AD (não fatal):', err.message);
-  });
+function erroDeConexao(err) {
+  return (
+    err.code === 'AD_TIMEOUT' ||
+    /ECONNRESET|ETIMEDOUT|EPIPE|ECONNREFUSED|socket|closed|timeout|connect/i.test(err.message || '')
+  );
+}
 
-  return adInstance;
+// Autentica; se a conexão estava podre, refaz UMA vez com conexão nova
+async function autenticarNoAD(login, senha, tentativa = 1) {
+  try {
+    const ad = await comTimeout(getADClient(), 8000, 'Timeout ao conectar no AD');
+    return await comTimeout(ad.authenticate(login, senha), 8000, 'Timeout ao autenticar no AD');
+  } catch (err) {
+    if (erroDeConexao(err)) {
+      console.error(`AD falhou (tentativa ${tentativa}):`, err.message);
+      resetAD();
+      if (tentativa < 2) return autenticarNoAD(login, senha, tentativa + 1);
+    }
+    throw err;
+  }
 }
 
 // Grupo do AD que dá acesso total de administrador
@@ -744,7 +798,7 @@ app.post('/api/login-ad', async (req, res) => {
   try {
     const ad = await getADClient();
     const loginNormalizado = normalizeUsername(usuario);
-    const user = await ad.authenticate(loginNormalizado, senha);
+    const user = await autenticarNoAD(loginNormalizado, senha);
 
     const groups = Array.isArray(user.memberOf)
       ? user.memberOf
@@ -808,12 +862,17 @@ app.post('/api/login-ad', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erro na autenticação AD:', error.message);
-    return res.status(401).json({
+  console.error('Erro na autenticação AD:', error.message);
+
+  if (erroDeConexao(error)) {
+    return res.status(503).json({
       success: false,
-      error: 'Usuário ou senha inválidos'
+      error: 'Servidor de autenticação indisponível. Tente novamente.'
     });
   }
+
+  return res.status(401).json({ success: false, error: 'Usuário ou senha inválidos' });
+}
 });
 
 app.post('/api/logout', (req, res) => {

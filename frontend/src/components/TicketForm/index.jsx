@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import styles from './index.module.css';
 import SuccessScreen from '../../components/SuccessScreen';
 import AddressInput from '../AddressInput.jsx';
+import { DateField, TimeField } from '../../components/DateTimePicker';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:2999';
 
@@ -193,12 +194,11 @@ export function TicketForm() {
               <Calendar className={styles.labelIcon} />
               Data
             </label>
-            <input
-              type="date"
+            <DateField
               name="data"
               value={formData.data}
               onChange={handleChange}
-              className={styles.input}
+              minDate={new Date()}
               required
             />
           </div>
@@ -208,12 +208,10 @@ export function TicketForm() {
               <Clock className={styles.labelIcon} />
               Horário
             </label>
-            <input
-              type="time"
+            <TimeField
               name="hora"
               value={formData.hora}
               onChange={handleChange}
-              className={styles.input}
               required
             />
           </div>

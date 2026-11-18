@@ -38,7 +38,7 @@ const podeRedirecionar = isAdmin || isGilog;
 
   const handleConcluir = () => {
     setFormAtivo(null);
-    onAtualizar();
+    onAtualizar?.();
   };
 
   return (

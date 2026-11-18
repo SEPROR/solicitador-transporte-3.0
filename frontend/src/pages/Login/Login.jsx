@@ -100,7 +100,7 @@ const handleSubmit = async (e) => {
               id="username"
               className={styles.input}
               type="text"
-              placeholder="seu.usuario"
+              placeholder="seu usuario"
               autoComplete="username"
               autoFocus
               required

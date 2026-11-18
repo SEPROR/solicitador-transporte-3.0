@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "nodemailer": "^9.1.0"
+    "date-fns": "^4.4.0",
+    "nodemailer": "^9.1.0",
+    "react-datepicker": "^9.1.0"
   }
 }
