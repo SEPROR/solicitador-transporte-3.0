@@ -8,9 +8,15 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const nodemailer = require('nodemailer'); 
 const rateLimit = require('express-rate-limit');
-
+const crypto = require('crypto');
 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+const TELEGRAM_BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME;
+
+function montarLinkTelegram(token) {
+  return `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${token}`;
+}
 
 const app = express();
 const port = process.env.PORT;
@@ -709,7 +715,13 @@ async function processarRegistro(chatId) {
 }
 
 async function processarComando(chatId, texto) {
-  const comando = texto.toLowerCase();
+  const [cmd, payload] = texto.trim().split(/\s+/);
+  const comando = cmd.toLowerCase();
+
+  if (comando === '/start' && payload) {
+    await vincularPorToken(chatId, payload);
+    return;
+  }
 
   if (comando === '/start' || comando === '/ajuda') {
     await enviarMensagemTelegram(
@@ -741,7 +753,7 @@ async function processarComando(chatId, texto) {
 async function listarSolicitacoesMotorista(chatId) {
   try {
     const result = await pool.query(
-      `SELECT s.id, s.destino, s.status, s.data_abertura, setor.nome AS setor
+      `SELECT s.id, s.embarque, s.desembarque, s.status, s.data_abertura, setor.nome AS setor
        FROM solicitacoes s 
        JOIN motoristas m ON s.motorista_id = m.id 
        JOIN setores setor ON s.setor_id = setor.id
@@ -761,7 +773,7 @@ async function listarSolicitacoesMotorista(chatId) {
     let mensagem = '📋 SUAS SOLICITAÇÕES EM ABERTO:\n\n';
 
     result.rows.forEach((solicitacao) => {
-      mensagem += `Solicitação #${solicitacao.id} - ${solicitacao.destino}\n`;
+      mensagem += `Solicitação #${solicitacao.id} - ${solicitacao.embarque} → ${solicitacao.desembarque}\n`;
       mensagem += `Setor: ${solicitacao.setor}\n`;
       mensagem += `Status: ${solicitacao.status}\n`;
       mensagem += `Aberta em: ${new Date(
@@ -953,7 +965,8 @@ app.delete('/api/solicitacao/:id', apenasGilog, async (req, res) => {
 app.get('/api/motoristas', async (req, res) => {
   try {
     const query = `
-      SELECT m.*, n.nome as nivel_nome, n.codigo_acesso
+      SELECT m.id, m.nome, m.ativo, m.nivel_id,
+             n.nome as nivel_nome, n.codigo_acesso
       FROM motoristas m
       LEFT JOIN nivel_tecnico n ON m.nivel_id = n.id
       WHERE m.ativo = TRUE
@@ -968,6 +981,7 @@ app.get('/api/motoristas', async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar técnicos' });
   }
 });
+
 
 // Obter todos os setores
 app.get('/api/setores', async (req, res) => {
@@ -1374,19 +1388,58 @@ app.post('/api/motoristas', apenasGilog, async (req, res) => {
 
   try {
     const login = usuario_login || nome.toLowerCase().replace(/\s+/g, '.');
+    const token = crypto.randomBytes(16).toString('hex');
 
     const result = await pool.query(
-      'INSERT INTO motoristas (nome, whatsapp, usuario_login) VALUES ($1, $2, $3) RETURNING *',
-      [nome, whatsapp, login]
+      `INSERT INTO motoristas (nome, whatsapp, usuario_login, telegram_token)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [nome, whatsapp, login, token]
     );
 
-    res.json(result.rows[0]);
-
+    res.json({ ...result.rows[0], telegram_link: montarLinkTelegram(token) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao criar motorista' });
   }
 });
+
+app.post('/api/motoristas/:id/telegram-link', apenasGilog, async (req, res) => {
+  try {
+    const token = crypto.randomBytes(16).toString('hex');
+    const r = await pool.query(
+      'UPDATE motoristas SET telegram_token = $1 WHERE id = $2 AND ativo = TRUE RETURNING nome, whatsapp',
+      [token, req.params.id]
+    );
+    if (r.rowCount === 0) return res.status(404).json({ error: 'Motorista não encontrado' });
+
+    res.json({ ...r.rows[0], telegram_link: montarLinkTelegram(token) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao gerar link' });
+  }
+});
+
+async function vincularPorToken(chatId, token) {
+  const r = await pool.query(
+    `UPDATE motoristas
+     SET telegram_chat_id = $1, telegram_token = NULL
+     WHERE telegram_token = $2 AND ativo = TRUE
+     RETURNING nome`,
+    [chatId.toString(), token]
+  );
+
+  if (r.rowCount > 0) {
+    await enviarMensagemTelegram(
+      chatId,
+      `✅ Vinculado com sucesso como: ${r.rows[0].nome}\n\nAgora você receberá as solicitações aqui.`
+    );
+  } else {
+    await enviarMensagemTelegram(
+      chatId,
+      '❌ Link inválido ou já utilizado. Peça um novo link ao administrador.'
+    );
+  }
+}
 
 app.delete('/api/motoristas/:id', apenasGilog, async (req, res) => {
   const { id } = req.params;

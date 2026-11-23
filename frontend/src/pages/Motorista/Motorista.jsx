@@ -22,6 +22,7 @@ export default function Motoristas() {
   const [formData, setFormData] = useState({ nome: '', usuario_login: '', whatsapp: '' });
   const [status, setStatus] = useState({ tipo: '', mensagem: '' });
   const [enviando, setEnviando] = useState(false);
+  const [linkTelegram, setLinkTelegram] = useState(null);
 
   const carregarMotoristas = useCallback(async () => {
     try {
@@ -82,6 +83,8 @@ export default function Motoristas() {
       });
 
       if (!response.ok) {
+        const novo = await response.json();
+        setLinkTelegram({ nome: novo.nome, link: novo.telegram_link, whatsapp: novo.whatsapp });
         const error = await response.json();
         throw new Error(error.error || 'Erro ao adicionar técnico');
       }
@@ -95,6 +98,20 @@ export default function Motoristas() {
     } finally {
       setEnviando(false);
       setTimeout(() => setStatus({ tipo: '', mensagem: '' }), 3000);
+    }
+  };
+
+  const gerarLinkTelegram = async (motorista) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/motoristas/${motorista.id}/telegram-link`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      setLinkTelegram({ nome: motorista.nome, link: data.telegram_link, whatsapp: motorista.whatsapp });
+    } catch {
+      alert('Erro ao gerar link do Telegram.');
     }
   };
 
@@ -169,7 +186,7 @@ export default function Motoristas() {
         <main style={{ padding: '48px 24px', textAlign: 'center' }}>
           <p>Carregando...</p>
         </main>
-        <Footer/>
+        <Footer />
       </div>
     );
   }
@@ -232,6 +249,26 @@ export default function Motoristas() {
             </button>
           </form>
 
+          {linkTelegram && (
+            <div className={styles.mensagemSucesso}>
+              <p>Link do Telegram para <strong>{linkTelegram.nome}</strong>:</p>
+              <input readOnly value={linkTelegram.link} className={styles.input} onFocus={(e) => e.target.select()} />
+              <button type="button" onClick={() => navigator.clipboard.writeText(linkTelegram.link)}>
+                Copiar link
+              </button>{' '}
+              <a
+                href={`https://wa.me/55${linkTelegram.whatsapp}?text=${encodeURIComponent(
+                  'Olá! Toque no link e depois em "Iniciar" para receber as solicitações de transporte: ' + linkTelegram.link
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Enviar pelo WhatsApp
+              </a>{' '}
+              <button type="button" onClick={() => setLinkTelegram(null)}>Fechar</button>
+            </div>
+          )}
+
           {status.mensagem && (
             <div className={status.tipo === 'sucesso' ? styles.mensagemSucesso : styles.mensagemErro}>
               {status.mensagem}
@@ -281,6 +318,11 @@ export default function Motoristas() {
                     >
                       Editar
                     </button>
+
+                    <button onClick={() => gerarLinkTelegram(motorista)} className={styles.botaoEditar}>
+                      Link Telegram
+                    </button>
+
                     {motorista.ativo && (
                       <button
                         onClick={() => excluirMotorista(motorista.id)}
@@ -296,7 +338,7 @@ export default function Motoristas() {
           </div>
         </div>
       </main>
-      <Footer/>
+      <Footer />
     </div>
   );
 }
